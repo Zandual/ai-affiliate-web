@@ -2,25 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
     <!--
-      IMPORTANT:
-      - Keep the app’s JS bundle links (index.*.js and AppEntry-*.js)
-      - Keep <div id="root"></div> in the body
-      - Our animation is a BACKGROUND canvas that must NOT block the UI
+      IMPORTANT RULES (Cloudflare Pages + your app bundle)
+      ----------------------------------------------------
+      1) Keep <div id="root"></div> (React mounts here).
+      2) Keep BOTH bundle scripts:
+         - index.<hash>.js  (main web bundle)
+         - AppEntry-<hash>.js (Expo entry)
+      3) If products disappear, check DevTools -> Network:
+         - If you see 404 for index.<hash>.js, React never runs.
     -->
 
-    <!-- Helps relative routing behave predictably on Cloudflare Pages -->
+    <!-- Helps relative links behave on Cloudflare Pages -->
     <base href="/" />
 
     <title>AI Affiliate</title>
 
-    <!-- Your app bundle(s) -->
-    <script src="./index.DRTaNfeK.js" defer></script>
+    <!--
+      ✅ Use ROOT-RELATIVE paths (start with /)
+      Why? Because /index... always means "from the site root",
+      which prevents weird path issues (like /something/index...).
+      
+      ⚠️ VERY IMPORTANT:
+      The filename must match EXACTLY what exists in your GitHub repo.
+      If you renamed or regenerated bundles, update the filename here.
+    -->
+    <script src="/index.DRTaNfeK.js" defer></script>
 
     <style>
       /* ====== Page baseline ====== */
@@ -31,7 +40,7 @@
       }
 
       body {
-        /* A soft gradient so the canvas has something nice to sit on */
+        /* Soft gradient so the spark effect feels “premium” */
         background: radial-gradient(
             1200px 800px at 20% 20%,
             rgba(120, 150, 255, 0.12),
@@ -59,27 +68,24 @@
         height: 100%;
         z-index: 0;
 
-        /*
-          CRITICAL:
-          This makes sure the canvas never blocks clicking/scrolling the real UI.
-        */
+        /* CRITICAL: canvas never blocks clicking/scrolling */
         pointer-events: none;
       }
 
       /* ====== App layer ====== */
       #root {
         position: relative;
-        z-index: 1; /* App always renders ABOVE the canvas */
+        z-index: 1; /* App always above the canvas */
         min-height: 100%;
       }
 
-      /* ====== Hint pill (UI overlay) ====== */
+      /* ====== Hint pill ====== */
       #spark-hint {
         position: fixed;
         top: 10px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 2; /* Above app + canvas */
+        z-index: 2;
         font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         background: rgba(255, 255, 255, 0.85);
         border: 1px solid rgba(0, 0, 0, 0.08);
@@ -88,11 +94,11 @@
         border-radius: 999px;
         backdrop-filter: blur(8px);
         user-select: none;
-        pointer-events: none; /* Also never blocks the UI */
+        pointer-events: none;
         color: #222;
       }
 
-      /* Respect accessibility: if user prefers reduced motion, don’t animate. */
+      /* Accessibility: reduce motion */
       @media (prefers-reduced-motion: reduce) {
         #spark-hint {
           display: none;
@@ -110,28 +116,26 @@
     <!-- Tiny hint -->
     <div id="spark-hint">Move your mouse ✨ click to “spark” the background</div>
 
-    <!-- React/Expo app mounts here -->
+    <!-- React mounts here -->
     <div id="root"></div>
 
-    <!-- Your Expo AppEntry bundle -->
-    <script src="./AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js" defer></script>
+    <!-- Expo AppEntry bundle (also root-relative) -->
+    <script src="/AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js" defer></script>
 
     <script>
       /**
        * Spark Background (safe + non-blocking)
-       * ------------------------------------------------------------
-       * - Uses a fixed canvas behind the app.
-       * - pointer-events: none so it cannot break the UI.
-       * - Uses requestAnimationFrame for smooth animation.
-       * - Respects prefers-reduced-motion.
+       * - Canvas is BEHIND the app (z-index 0)
+       * - pointer-events:none so it can't break the UI
+       * - requestAnimationFrame for smooth animation
+       * - respects prefers-reduced-motion
        */
-
       (function () {
-        const reduceMotion = window.matchMedia &&
+        const reduceMotion =
+          window.matchMedia &&
           window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
         if (reduceMotion) {
-          // Accessibility: disable animation for users who prefer reduced motion.
           const hint = document.getElementById("spark-hint");
           if (hint) hint.remove();
           return;
@@ -143,7 +147,9 @@
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        let w = 0, h = 0, dpr = 1;
+        let w = 0,
+          h = 0,
+          dpr = 1;
 
         function resize() {
           dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -159,7 +165,6 @@
         window.addEventListener("resize", resize, { passive: true });
         resize();
 
-        // Particle model
         const particles = [];
         const MAX_PARTICLES = 260;
 
@@ -169,29 +174,30 @@
           vx: 0,
           vy: 0,
           lastX: w * 0.5,
-          lastY: h * 0.4
+          lastY: h * 0.4,
         };
 
-        // We listen on window, but the canvas has pointer-events none so it won’t intercept anything.
-        window.addEventListener("mousemove", (e) => {
-          const x = e.clientX;
-          const y = e.clientY;
+        window.addEventListener(
+          "mousemove",
+          (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
 
-          mouse.vx = x - mouse.lastX;
-          mouse.vy = y - mouse.lastY;
+            mouse.vx = x - mouse.lastX;
+            mouse.vy = y - mouse.lastY;
 
-          mouse.lastX = x;
-          mouse.lastY = y;
+            mouse.lastX = x;
+            mouse.lastY = y;
 
-          mouse.x = x;
-          mouse.y = y;
+            mouse.x = x;
+            mouse.y = y;
 
-          // Create a small trail
-          spawn(x, y, 2, 0.8);
-        }, { passive: true });
+            spawn(x, y, 2, 0.8);
+          },
+          { passive: true }
+        );
 
         window.addEventListener("click", (e) => {
-          // Bigger burst on click
           spawn(e.clientX, e.clientY, 28, 2.6);
         });
 
@@ -208,25 +214,20 @@
               vx: Math.cos(angle) * speed + mouse.vx * 0.03,
               vy: Math.sin(angle) * speed + mouse.vy * 0.03,
               r: 1 + Math.random() * 3.5,
-              life: 1,               // 1 -> 0
+              life: 1,
               decay: 0.012 + Math.random() * 0.02,
-              hue: 210 + Math.random() * 80
+              hue: 210 + Math.random() * 80,
             });
           }
         }
 
         function draw() {
-          // Clear with slight alpha to create a gentle "fade trail"
           ctx.clearRect(0, 0, w, h);
 
-          // Draw particles
           for (let i = particles.length - 1; i >= 0; i--) {
             const p = particles[i];
-
             p.x += p.vx;
             p.y += p.vy;
-
-            // Slow down a little (fake “air resistance”)
             p.vx *= 0.98;
             p.vy *= 0.98;
 
@@ -246,7 +247,6 @@
           requestAnimationFrame(draw);
         }
 
-        // Start!
         draw();
       })();
     </script>
