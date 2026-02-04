@@ -86,6 +86,114 @@
         });
 
       });
-    </script>
+    </script
+      
+<canvas id="bg"></canvas>
+
+<style>
+  #bg{
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+  }
+  body{
+    background: radial-gradient(circle at 20% 20%, rgba(0,150,255,.10), transparent 45%),
+                radial-gradient(circle at 80% 30%, rgba(140,0,255,.08), transparent 50%),
+                radial-gradient(circle at 50% 90%, rgba(0,255,180,.06), transparent 45%),
+                #ffffff;
+  }
+</style>
+
+<script>
+(() => {
+  const canvas = document.getElementById("bg");
+  const ctx = canvas.getContext("2d");
+
+  const DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  let w = 0, h = 0;
+
+  function resize(){
+    w = Math.floor(window.innerWidth);
+    h = Math.floor(window.innerHeight);
+    canvas.width = w * DPR;
+    canvas.height = h * DPR;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  const mouse = { x: w * 0.5, y: h * 0.5 };
+  window.addEventListener("mousemove", (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  const N = 70;
+  const pts = Array.from({length:N}, () => ({
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: (Math.random() - 0.5) * 0.35,
+    vy: (Math.random() - 0.5) * 0.35,
+    r: 1.2 + Math.random() * 1.8
+  }));
+
+  function tick(){
+    ctx.clearRect(0,0,w,h);
+
+    // particles
+    for(const p of pts){
+      // gentle drift
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // mouse attraction (subtle)
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const d2 = dx*dx + dy*dy;
+      if(d2 < 180*180){
+        p.vx += dx * 0.00001;
+        p.vy += dy * 0.00001;
+      }
+
+      // wrap edges
+      if(p.x < -20) p.x = w + 20;
+      if(p.x > w + 20) p.x = -20;
+      if(p.y < -20) p.y = h + 20;
+      if(p.y > h + 20) p.y = -20;
+
+      // draw dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.fill();
+    }
+
+    // connecting lines
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const a = pts[i], b = pts[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.hypot(dx,dy);
+        if(d < 140){
+          ctx.globalAlpha = (1 - d/140) * 0.18;
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.lineTo(b.x,b.y);
+          ctx.strokeStyle = "rgba(0,0,0,0.35)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+
 </body>
 </html>
