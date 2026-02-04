@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <!-- Cloudflare Pages needs a correct base. Keep this as "/" since you fixed base href earlier. -->
+
+    <!--
+      IMPORTANT:
+      - For Cloudflare Pages at the site root, "/" is OK.
+      - If you deploy under a sub-path later, you may need "./"
+    -->
     <base href="/" />
 
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -10,47 +15,52 @@
     <title>AI Affiliate</title>
 
     <!--
-      Expo / react-native-web reset + a little extra styling.
-      IMPORTANT: #root must exist and your AppEntry JS must mount into it.
+      Expo / react-native-web reset:
+      This helps RN Web layout behave correctly.
     -->
     <style id="expo-reset">
       html,
       body {
         height: 100%;
-        margin: 0;
-        font-family: system-ui, sans-serif;
       }
-
-      /* Your app uses a full-height root container */
-      #root {
-        display: flex;
-        height: 100%;
-        flex: 1;
-        position: relative; /* so z-index layering behaves */
-        z-index: 1;         /* keep app above the background canvas */
-      }
-
-      /*
-        If you keep overflow hidden, long lists won't scroll.
-        Better default: allow scrolling. Your app can still manage scroll itself.
-      */
       body {
-        overflow: auto;
-        background: radial-gradient(circle at 20% 20%, rgba(0,150,255,.10), transparent 45%),
-                    radial-gradient(circle at 80% 30%, rgba(140,0,255,.08), transparent 50%),
-                    radial-gradient(circle at 50% 90%, rgba(0,255,180,.06), transparent 45%),
-                    #ffffff;
+        margin: 0;
+        overflow-x: hidden;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        /* Soft gradient background (your animation will sit on top of this) */
+        background: linear-gradient(135deg, #f8fafc, #eef2ff);
+      }
+      #root {
+        min-height: 100%;
+        position: relative;
+        z-index: 1; /* Keep the app ABOVE the canvas */
+      }
+
+      /* A small hint banner (non-clickable so it won't block buttons) */
+      .spark-hint {
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        color: rgba(0, 0, 0, 0.75);
+        pointer-events: none; /* Don't block clicks on the app */
+        user-select: none;
       }
 
       /*
-        Background canvas (non-interactive visual layer)
-        pointer-events: none means it will NEVER block clicks/taps on your UI.
+        Canvas behind everything.
+        pointer-events:none means your "GET DEAL" buttons remain clickable.
       */
-      #bg {
+      #spark-canvas {
         position: fixed;
         inset: 0;
-        width: 100vw;
-        height: 100vh;
         z-index: 0;
         pointer-events: none;
       }
@@ -58,161 +68,140 @@
   </head>
 
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Interactive canvas background -->
+    <canvas id="spark-canvas" aria-hidden="true"></canvas>
 
-    <!-- Visual background layer -->
-    <canvas id="bg" aria-hidden="true"></canvas>
+    <!-- Small helper text (optional) -->
+    <div class="spark-hint">Move your mouse ✨ click to “spark” the background</div>
 
-    <!-- Expo app mounts here -->
+    <!-- Expo mounts the app here -->
     <div id="root"></div>
 
     <!--
-      1) AppEntry must load (this is your built bundle).
-      Use defer so it loads after HTML is parsed, without blocking rendering.
+      Your bundled Expo entry script (keep this!)
+      NOTE: your repo has a hashed name like AppEntry-ff4ae5....js
+      Make sure the file name matches what exists in your repo.
     -->
     <script src="./AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js" defer></script>
 
     <!--
-      2) Small enhancement script:
-         - draws the animated background
-         - adds subtle animations to product cards AFTER they appear
-      Use defer so it runs after parsing and alongside AppEntry loading.
+      Interactive background script (pure JS, no libraries)
+      Designed to be "safe": it won't block your app and won't touch the API calls.
     -->
-    <script defer>
+    <script>
       (function () {
-        /***********************
-         * PART A: Background canvas animation
-         ************************/
-        const canvas = document.getElementById("bg");
-        const ctx = canvas.getContext("2d");
+        "use strict";
 
-        const DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-        let w = 0, h = 0;
+        // Grab the canvas and context
+        const canvas = document.getElementById("spark-canvas");
+        const ctx = canvas.getContext("2d", { alpha: true });
+
+        // Respect users who prefer reduced motion
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        // Track size
+        let w = 0;
+        let h = 0;
+        let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
         function resize() {
-          w = Math.floor(window.innerWidth);
-          h = Math.floor(window.innerHeight);
-          canvas.width = w * DPR;
-          canvas.height = h * DPR;
+          w = window.innerWidth;
+          h = window.innerHeight;
+          dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
           canvas.style.width = w + "px";
           canvas.style.height = h + "px";
-          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        }
 
-        window.addEventListener("resize", resize);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener("resize", resize, { passive: true });
         resize();
 
-        const mouse = { x: w * 0.5, y: h * 0.5 };
-        window.addEventListener("mousemove", (e) => {
-          mouse.x = e.clientX;
-          mouse.y = e.clientY;
-        });
+        // Particle system
+        const particles = [];
+        const MAX_PARTICLES = 140;
 
-        // Lightweight particle field (kept modest so it doesn't hurt performance)
-        const N = 60;
-        const pts = Array.from({ length: N }, () => ({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          r: 1.2 + Math.random() * 1.8,
-        }));
+        function addSpark(x, y, count, power) {
+          if (reduceMotion) return;
 
+          for (let i = 0; i < count; i++) {
+            if (particles.length >= MAX_PARTICLES) particles.shift();
+
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (Math.random() * 0.8 + 0.2) * power;
+
+            particles.push({
+              x,
+              y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              r: Math.random() * 2.2 + 0.8,
+              life: 1,
+              decay: Math.random() * 0.02 + 0.01
+            });
+          }
+        }
+
+        // Mouse trail
+        let lastX = w / 2;
+        let lastY = h / 2;
+
+        window.addEventListener(
+          "mousemove",
+          (e) => {
+            lastX = e.clientX;
+            lastY = e.clientY;
+            addSpark(lastX, lastY, 2, 1.2);
+          },
+          { passive: true }
+        );
+
+        // Click burst
+        window.addEventListener(
+          "click",
+          (e) => {
+            addSpark(e.clientX, e.clientY, 28, 3.2);
+          },
+          { passive: true }
+        );
+
+        // Animation loop
         function tick() {
+          // Clear with a slight "fade" for trail effect
           ctx.clearRect(0, 0, w, h);
 
-          // dots
-          for (const p of pts) {
+          // Draw particles
+          for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+
             p.x += p.vx;
             p.y += p.vy;
+            p.vx *= 0.98;
+            p.vy *= 0.98;
+            p.life -= p.decay;
 
-            // gentle mouse attraction
-            const dx = mouse.x - p.x;
-            const dy = mouse.y - p.y;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < 180 * 180) {
-              p.vx += dx * 0.00001;
-              p.vy += dy * 0.00001;
+            if (p.life <= 0) {
+              particles.splice(i, 1);
+              continue;
             }
 
-            // wrap
-            if (p.x < -20) p.x = w + 20;
-            if (p.x > w + 20) p.x = -20;
-            if (p.y < -20) p.y = h + 20;
-            if (p.y > h + 20) p.y = -20;
-
+            // Soft glow dot
+            ctx.globalAlpha = Math.max(0, p.life);
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0,0,0,0.10)";
+            ctx.fillStyle = "rgba(99, 102, 241, 0.55)"; /* indigo-ish */
             ctx.fill();
           }
 
-          // lines
-          for (let i = 0; i < pts.length; i++) {
-            for (let j = i + 1; j < pts.length; j++) {
-              const a = pts[i], b = pts[j];
-              const dx = a.x - b.x, dy = a.y - b.y;
-              const d = Math.hypot(dx, dy);
-              if (d < 140) {
-                ctx.globalAlpha = (1 - d / 140) * 0.16;
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(b.x, b.y);
-                ctx.strokeStyle = "rgba(0,0,0,0.30)";
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                ctx.globalAlpha = 1;
-              }
-            }
-          }
+          ctx.globalAlpha = 1;
 
           requestAnimationFrame(tick);
         }
+
+        // Start
         tick();
-
-        /***********************
-         * PART B: UI micro-interactions
-         * Your app is rendered by AppEntry, so cards may appear AFTER page load.
-         * We "watch" the DOM and animate cards when they show up.
-         ************************/
-        function enhanceCards(root) {
-          // Try multiple selectors because your UI might use different class names.
-          const cards = root.querySelectorAll(".product-card, .card");
-          cards.forEach((card) => {
-            // Prevent re-applying on the same element
-            if (card.dataset.enhanced === "1") return;
-            card.dataset.enhanced = "1";
-
-            card.style.opacity = "0";
-            card.style.transform = "translateY(12px)";
-            card.style.transition = "opacity 500ms ease, transform 500ms ease, box-shadow 200ms ease";
-
-            // Let layout happen first, then animate in
-            requestAnimationFrame(() => {
-              card.style.opacity = "1";
-              card.style.transform = "translateY(0)";
-            });
-
-            card.addEventListener("mouseenter", () => {
-              card.style.boxShadow = "0 10px 30px rgba(0,0,0,0.10)";
-            });
-            card.addEventListener("mouseleave", () => {
-              card.style.boxShadow = "none";
-            });
-          });
-        }
-
-        // Run once after DOM is ready
-        document.addEventListener("DOMContentLoaded", () => {
-          enhanceCards(document);
-        });
-
-        // Observe #root for new content (React renders after load)
-        const rootEl = document.getElementById("root");
-        if (rootEl) {
-          const observer = new MutationObserver(() => enhanceCards(rootEl));
-          observer.observe(rootEl, { childList: true, subtree: true });
-        }
       })();
     </script>
   </body>
