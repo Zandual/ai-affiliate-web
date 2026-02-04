@@ -59,7 +59,7 @@
       document.addEventListener("DOMContentLoaded", () => {
 
         // Fade-in cards on load
-        const cards = document.querySelectorAll('.product-card, .card, div');
+        const cards = document.querySelectorAll('.product-card, .card');
 
         cards.forEach((card, i) => {
           card.style.opacity = 0;
@@ -81,7 +81,7 @@
 
           btn.addEventListener('mouseleave', () => {
             btn.style.transform - "scale(1)";
-            btn.style.boxShawdow = "none";
+            btn.style.boxShadow = "none";
           });
         });
 
