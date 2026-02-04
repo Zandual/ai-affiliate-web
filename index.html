@@ -1,354 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
+    <!-- Cloudflare Pages needs a correct base. Keep this as "/" since you fixed base href earlier. -->
+    <base href="/" />
 
-    <!--
-      ✅ Important for Cloudflare Pages + SPA routing:
-      Using "./" keeps relative asset paths working on both:
-      - https://ai-affiliate-web.pages.dev/
-      - https://ai-affiliate-web.pages.dev/product/whatever
-    -->
-    <base href="./" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>AI Affiliate</title>
 
-    <style>
-      /* =========================================================
-         1) Layout fundamentals
-         ========================================================= */
-
+    <!--
+      Expo / react-native-web reset + a little extra styling.
+      IMPORTANT: #root must exist and your AppEntry JS must mount into it.
+    -->
+    <style id="expo-reset">
       html,
       body {
         height: 100%;
         margin: 0;
+        font-family: system-ui, sans-serif;
+      }
+
+      /* Your app uses a full-height root container */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+        position: relative; /* so z-index layering behaves */
+        z-index: 1;         /* keep app above the background canvas */
       }
 
       /*
-        ❗ Key fix:
-        We do NOT paint an opaque background on body anymore,
-        because that would cover the canvas.
+        If you keep overflow hidden, long lists won't scroll.
+        Better default: allow scrolling. Your app can still manage scroll itself.
       */
       body {
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        color: #111;
-        overflow-x: hidden;
-
-        /* A soft fallback if canvas fails */
-        background: radial-gradient(1200px 600px at 20% 0%, #eef2ff 0%, #f7f7f7 55%, #ffffff 100%);
-      }
-
-      /* =========================================================
-         2) Animated background layers (canvas + glow)
-         ========================================================= */
-
-      /*
-        Canvas should be:
-        - fixed to viewport
-        - behind content
-        - not block clicks (pointer-events: none)
-      */
-      #bg-canvas {
-        position: fixed;
-        inset: 0;              /* top:0 right:0 bottom:0 left:0 */
-        width: 100%;
-        height: 100%;
-        z-index: 0;            /* behind content, above body background */
-        pointer-events: none;  /* don't steal clicks */
+        overflow: auto;
+        background: radial-gradient(circle at 20% 20%, rgba(0,150,255,.10), transparent 45%),
+                    radial-gradient(circle at 80% 30%, rgba(140,0,255,.08), transparent 50%),
+                    radial-gradient(circle at 50% 90%, rgba(0,255,180,.06), transparent 45%),
+                    #ffffff;
       }
 
       /*
-        A "spotlight" glow that follows the mouse.
-        This is purely visual; it will not block clicks.
+        Background canvas (non-interactive visual layer)
+        pointer-events: none means it will NEVER block clicks/taps on your UI.
       */
-      #cursor-glow {
+      #bg {
         position: fixed;
-        width: 520px;
-        height: 520px;
-        left: 0;
-        top: 0;
-        transform: translate(-9999px, -9999px);
-        border-radius: 50%;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
         z-index: 0;
         pointer-events: none;
-        background: radial-gradient(circle at center, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0) 60%);
-        filter: blur(2px);
-      }
-
-      /* =========================================================
-         3) App content wrapper
-         ========================================================= */
-
-      /*
-        Your app (React) renders into #root.
-        We give it a higher z-index than the canvas so it stays readable.
-      */
-      #app-shell {
-        position: relative;
-        z-index: 1;
-        min-height: 100%;
-      }
-
-      /*
-        Optional: give the page a subtle "glass" feel without rewriting your app.
-        This makes your product cards pop while keeping background visible.
-      */
-      .page-glass {
-        backdrop-filter: blur(6px);
-      }
-
-      /*
-        We add a simple top banner that doesn’t interfere with your app.
-        If you don’t want it later, you can delete the <header> in the body.
-      */
-      .top-banner {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.78);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-      }
-
-      .top-banner-inner {
-        max-width: 1100px;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .brand {
-        font-weight: 700;
-        letter-spacing: 0.2px;
-      }
-
-      .hint {
-        font-size: 0.92rem;
-        opacity: 0.8;
-      }
-
-      /* Respect accessibility: users who prefer reduced motion */
-      @media (prefers-reduced-motion: reduce) {
-        #bg-canvas,
-        #cursor-glow {
-          display: none !important;
-        }
       }
     </style>
   </head>
 
   <body>
-    <!-- Background layers -->
-    <canvas id="bg-canvas" aria-hidden="true"></canvas>
-    <div id="cursor-glow" aria-hidden="true"></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
 
-    <!-- App shell (content above the animated background) -->
-    <div id="app-shell" class="page-glass">
-      <!-- Small UI polish banner (optional but nice for "interactive" feel) -->
-      <header class="top-banner">
-        <div class="top-banner-inner">
-          <div class="brand">AI Affiliate</div>
-          <div class="hint">Move your mouse ✨ click to “spark” the background</div>
-        </div>
-      </header>
+    <!-- Visual background layer -->
+    <canvas id="bg" aria-hidden="true"></canvas>
 
-      <!-- Your app mounts here -->
-      <div id="root"></div>
-    </div>
+    <!-- Expo app mounts here -->
+    <div id="root"></div>
 
-    <script>
-      /* =========================================================
-         Interactive animated background (educational version)
-         ---------------------------------------------------------
-         Goals:
-         - Lightweight (no libraries)
-         - Looks modern
-         - Interactive (mouse movement + click burst)
-         - Safe (doesn't block clicks, respects reduced motion)
-         ========================================================= */
+    <!--
+      1) AppEntry must load (this is your built bundle).
+      Use defer so it loads after HTML is parsed, without blocking rendering.
+    -->
+    <script src="./AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js" defer></script>
 
-      // 1) Respect accessibility settings early:
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!reduceMotion) {
-        const canvas = document.getElementById("bg-canvas");
+    <!--
+      2) Small enhancement script:
+         - draws the animated background
+         - adds subtle animations to product cards AFTER they appear
+      Use defer so it runs after parsing and alongside AppEntry loading.
+    -->
+    <script defer>
+      (function () {
+        /***********************
+         * PART A: Background canvas animation
+         ************************/
+        const canvas = document.getElementById("bg");
         const ctx = canvas.getContext("2d");
 
-        const glow = document.getElementById("cursor-glow");
-
-        // 2) Handle high-DPI screens (retina):
-        //    If we don't, the canvas can look blurry.
-        let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        const DPR = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+        let w = 0, h = 0;
 
         function resize() {
-          dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-          const w = Math.floor(window.innerWidth);
-          const h = Math.floor(window.innerHeight);
-
-          canvas.width = Math.floor(w * dpr);
-          canvas.height = Math.floor(h * dpr);
-
+          w = Math.floor(window.innerWidth);
+          h = Math.floor(window.innerHeight);
+          canvas.width = w * DPR;
+          canvas.height = h * DPR;
           canvas.style.width = w + "px";
           canvas.style.height = h + "px";
-
-          // Scale drawing so our math can stay in CSS pixels
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
         }
 
         window.addEventListener("resize", resize);
         resize();
 
-        // 3) Particle model:
-        //    Each particle has position + velocity + radius + alpha.
-        const particles = [];
-        const MAX_PARTICLES = 80;
-
-        // Mouse state for interactivity
-        const mouse = {
-          x: window.innerWidth * 0.5,
-          y: window.innerHeight * 0.35,
-          vx: 0,
-          vy: 0,
-          lastX: null,
-          lastY: null,
-        };
-
-        // Helper: create one particle
-        function spawnParticle(x, y, burst = false) {
-          // Small random velocity; burst gives it more energy.
-          const speed = burst ? 1.8 : 0.7;
-          const angle = Math.random() * Math.PI * 2;
-
-          particles.push({
-            x,
-            y,
-            vx: Math.cos(angle) * speed * (0.6 + Math.random()),
-            vy: Math.sin(angle) * speed * (0.6 + Math.random()),
-            r: burst ? (2.2 + Math.random() * 2.8) : (1.6 + Math.random() * 2.2),
-            a: burst ? 0.85 : 0.55,      // alpha
-            life: burst ? 140 : 220,     // frames
-          });
-
-          // Keep array from growing forever
-          if (particles.length > 220) particles.splice(0, particles.length - 220);
-        }
-
-        // 4) Seed initial particles across the screen
-        for (let i = 0; i < MAX_PARTICLES; i++) {
-          spawnParticle(
-            Math.random() * window.innerWidth,
-            Math.random() * window.innerHeight,
-            false
-          );
-        }
-
-        // 5) Mouse move = update velocity + move glow
+        const mouse = { x: w * 0.5, y: h * 0.5 };
         window.addEventListener("mousemove", (e) => {
-          if (mouse.lastX != null) {
-            mouse.vx = e.clientX - mouse.lastX;
-            mouse.vy = e.clientY - mouse.lastY;
-          }
-          mouse.lastX = e.clientX;
-          mouse.lastY = e.clientY;
-
           mouse.x = e.clientX;
           mouse.y = e.clientY;
-
-          // Move glow so it's centered on cursor
-          glow.style.transform = `translate(${mouse.x - 260}px, ${mouse.y - 260}px)`;
         });
 
-        // 6) Click = little burst of particles (fun + noticeable)
-        window.addEventListener("click", (e) => {
-          for (let i = 0; i < 18; i++) spawnParticle(e.clientX, e.clientY, true);
-        });
+        // Lightweight particle field (kept modest so it doesn't hurt performance)
+        const N = 60;
+        const pts = Array.from({ length: N }, () => ({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: (Math.random() - 0.5) * 0.35,
+          r: 1.2 + Math.random() * 1.8,
+        }));
 
-        // 7) Animation loop
-        function step() {
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-
-          // Clear with slight transparency -> creates a trailing effect
+        function tick() {
           ctx.clearRect(0, 0, w, h);
 
-          // Optional: draw a faint gradient wash for depth
-          const grad = ctx.createRadialGradient(mouse.x, mouse.y, 40, mouse.x, mouse.y, 520);
-          grad.addColorStop(0, "rgba(99, 102, 241, 0.08)");
-          grad.addColorStop(1, "rgba(99, 102, 241, 0)");
-          ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, w, h);
-
-          // Update particles
-          for (let i = 0; i < particles.length; i++) {
-            const p = particles[i];
-
-            // Subtle attraction to mouse (gives interactivity without being chaotic)
-            const dx = mouse.x - p.x;
-            const dy = mouse.y - p.y;
-            const dist = Math.max(40, Math.hypot(dx, dy));
-            const pull = 0.028; // strength
-
-            p.vx += (dx / dist) * pull;
-            p.vy += (dy / dist) * pull;
-
-            // Apply damping so particles don't accelerate forever
-            p.vx *= 0.985;
-            p.vy *= 0.985;
-
-            // Move
+          // dots
+          for (const p of pts) {
             p.x += p.vx;
             p.y += p.vy;
 
-            // Wrap edges (so particles re-enter instead of disappearing)
+            // gentle mouse attraction
+            const dx = mouse.x - p.x;
+            const dy = mouse.y - p.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < 180 * 180) {
+              p.vx += dx * 0.00001;
+              p.vy += dy * 0.00001;
+            }
+
+            // wrap
             if (p.x < -20) p.x = w + 20;
             if (p.x > w + 20) p.x = -20;
             if (p.y < -20) p.y = h + 20;
             if (p.y > h + 20) p.y = -20;
 
-            // Fade over time
-            p.life -= 1;
-            if (p.life < 0) p.life = 0;
-
-            const fade = Math.max(0, p.life / 220);
-            const alpha = p.a * fade;
-
-            // Draw particle
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(17, 24, 39, ${alpha * 0.18})`; // dark ink, subtle
+            ctx.fillStyle = "rgba(0,0,0,0.10)";
             ctx.fill();
+          }
 
-            // Optional: connect nearby particles with faint lines
-            for (let j = i + 1; j < particles.length; j++) {
-              const q = particles[j];
-              const d = Math.hypot(p.x - q.x, p.y - q.y);
-              if (d < 120) {
-                const lineAlpha = (1 - d / 120) * 0.08 * fade;
-                ctx.strokeStyle = `rgba(99, 102, 241, ${lineAlpha})`;
+          // lines
+          for (let i = 0; i < pts.length; i++) {
+            for (let j = i + 1; j < pts.length; j++) {
+              const a = pts[i], b = pts[j];
+              const dx = a.x - b.x, dy = a.y - b.y;
+              const d = Math.hypot(dx, dy);
+              if (d < 140) {
+                ctx.globalAlpha = (1 - d / 140) * 0.16;
                 ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(q.x, q.y);
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.strokeStyle = "rgba(0,0,0,0.30)";
+                ctx.lineWidth = 1;
                 ctx.stroke();
+                ctx.globalAlpha = 1;
               }
             }
           }
 
-          // Keep particle count healthy (replace dead ones)
-          // (This avoids the animation slowly fading away forever.)
-          while (particles.length < MAX_PARTICLES) {
-            spawnParticle(Math.random() * w, Math.random() * h, false);
-          }
+          requestAnimationFrame(tick);
+        }
+        tick();
 
-          requestAnimationFrame(step);
+        /***********************
+         * PART B: UI micro-interactions
+         * Your app is rendered by AppEntry, so cards may appear AFTER page load.
+         * We "watch" the DOM and animate cards when they show up.
+         ************************/
+        function enhanceCards(root) {
+          // Try multiple selectors because your UI might use different class names.
+          const cards = root.querySelectorAll(".product-card, .card");
+          cards.forEach((card) => {
+            // Prevent re-applying on the same element
+            if (card.dataset.enhanced === "1") return;
+            card.dataset.enhanced = "1";
+
+            card.style.opacity = "0";
+            card.style.transform = "translateY(12px)";
+            card.style.transition = "opacity 500ms ease, transform 500ms ease, box-shadow 200ms ease";
+
+            // Let layout happen first, then animate in
+            requestAnimationFrame(() => {
+              card.style.opacity = "1";
+              card.style.transform = "translateY(0)";
+            });
+
+            card.addEventListener("mouseenter", () => {
+              card.style.boxShadow = "0 10px 30px rgba(0,0,0,0.10)";
+            });
+            card.addEventListener("mouseleave", () => {
+              card.style.boxShadow = "none";
+            });
+          });
         }
 
-        step();
-      }
-    </script>
+        // Run once after DOM is ready
+        document.addEventListener("DOMContentLoaded", () => {
+          enhanceCards(document);
+        });
 
-    <!-- Your app bundle (keep this exactly as Cloudflare/GitHub has it) -->
-    <script src="./AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js"></script>
+        // Observe #root for new content (React renders after load)
+        const rootEl = document.getElementById("root");
+        if (rootEl) {
+          const observer = new MutationObserver(() => enhanceCards(rootEl));
+          observer.observe(rootEl, { childList: true, subtree: true });
+        }
+      })();
+    </script>
   </body>
 </html>
