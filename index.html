@@ -1,108 +1,144 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <!--
+      index.html = the shell of your site.
+      Your real UI (product cards, pages, routing) is rendered by AppEntry-*.js into <div id="root"></div>.
+
+      IMPORTANT:
+      - Cloudflare Pages + GitHub Pages can be picky about paths.
+      - Using <base href="./"> makes relative links work reliably on both.
+    -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!--
-      IMPORTANT:
-      - For Cloudflare Pages at the site root, "/" is OK.
-      - If you deploy under a sub-path later, you may need "./"
+      Base href controls how relative URLs resolve.
+      "./" = safest choice for static hosting when your site might be at / or /some-subfolder/.
     -->
-    <base href="/" />
+    <base href="./" />
 
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>AI Affiliate</title>
 
-    <!--
-      Expo / react-native-web reset:
-      This helps RN Web layout behave correctly.
-    -->
-    <style id="expo-reset">
+    <style>
+      /* =============================
+         GLOBAL PAGE LOOK & FEEL
+         ============================= */
+
       html,
       body {
         height: 100%;
       }
+
       body {
         margin: 0;
-        overflow-x: hidden;
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        /* Soft gradient background (your animation will sit on top of this) */
-        background: linear-gradient(135deg, #f8fafc, #eef2ff);
-      }
-      #root {
-        min-height: 100%;
-        position: relative;
-        z-index: 1; /* Keep the app ABOVE the canvas */
+        /* Soft background so the spark feels “premium” but not distracting */
+        background: radial-gradient(circle at top, #f5f7ff 0%, #ffffff 55%, #f7f7ff 100%);
+        color: #111827; /* near-black */
+        overflow-x: hidden;
       }
 
-      /* A small hint banner (non-clickable so it won't block buttons) */
-      .spark-hint {
-        position: fixed;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 2;
-        padding: 6px 12px;
-        font-size: 13px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(0, 0, 0, 0.06);
-        color: rgba(0, 0, 0, 0.75);
-        pointer-events: none; /* Don't block clicks on the app */
-        user-select: none;
-      }
+      /* =============================
+         BACKGROUND CANVAS (SPARKS)
+         ============================= */
 
-      /*
-        Canvas behind everything.
-        pointer-events:none means your "GET DEAL" buttons remain clickable.
-      */
+      /* Canvas is fixed and behind everything */
       #spark-canvas {
         position: fixed;
-        inset: 0;
-        z-index: 0;
+        inset: 0;              /* top:0 right:0 bottom:0 left:0 */
+        z-index: 0;            /* behind app */
+        pointer-events: none;  /* IMPORTANT: never blocks clicks on product buttons */
+      }
+
+      /* =============================
+         APP ROOT WRAPPER
+         ============================= */
+
+      /* Put the app ABOVE the canvas */
+      #app {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+      }
+
+      /* Optional: a tiny helper banner at top that doesn’t interfere with the app */
+      .spark-hint {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        padding: 10px 12px;
+        pointer-events: none; /* banner doesn’t block clicks */
+      }
+
+      .spark-hint span {
         pointer-events: none;
+        font-size: 13px;
+        color: #374151;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 999px;
+        padding: 6px 12px;
+        backdrop-filter: blur(8px);
       }
     </style>
   </head>
 
   <body>
-    <!-- Interactive canvas background -->
+    <!-- The spark canvas sits behind everything -->
     <canvas id="spark-canvas" aria-hidden="true"></canvas>
 
-    <!-- Small helper text (optional) -->
-    <div class="spark-hint">Move your mouse ✨ click to “spark” the background</div>
+    <!-- Small instruction banner -->
+    <div class="spark-hint">
+      <span>Move your mouse ✨ click to “spark” the background</span>
+    </div>
 
-    <!-- Expo mounts the app here -->
-    <div id="root"></div>
+    <!-- App wrapper (keeps your product UI above the canvas) -->
+    <div id="app">
+      <!--
+        React / JS bundle mounts here.
+        If products disappear, it usually means AppEntry didn't load correctly (path/base issue).
+      -->
+      <div id="root"></div>
+
+      <noscript>
+        This site needs JavaScript enabled to display products.
+      </noscript>
+    </div>
 
     <!--
-      Your bundled Expo entry script (keep this!)
-      NOTE: your repo has a hashed name like AppEntry-ff4ae5....js
-      Make sure the file name matches what exists in your repo.
+      This is your built app bundle.
+      IMPORTANT:
+      - Keep it "defer" so the HTML parses first.
+      - Do NOT rename this file unless you also update this reference.
     -->
     <script src="./AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js" defer></script>
 
-    <!--
-      Interactive background script (pure JS, no libraries)
-      Designed to be "safe": it won't block your app and won't touch the API calls.
-    -->
     <script>
+      /*
+        Interactive spark background.
+        Designed to be:
+        - Non-blocking (pointer-events: none on canvas)
+        - Lightweight (particle cap)
+        - Respectful of accessibility (prefers-reduced-motion)
+      */
       (function () {
         "use strict";
 
-        // Grab the canvas and context
         const canvas = document.getElementById("spark-canvas");
         const ctx = canvas.getContext("2d", { alpha: true });
 
         // Respect users who prefer reduced motion
-        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const reduceMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
         // Track size
         let w = 0;
         let h = 0;
-        let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        let dpr = 1;
 
         function resize() {
           w = window.innerWidth;
@@ -114,8 +150,10 @@
           canvas.style.width = w + "px";
           canvas.style.height = h + "px";
 
+          // Scale drawing for crispness on high-DPI screens
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
+
         window.addEventListener("resize", resize, { passive: true });
         resize();
 
@@ -139,40 +177,29 @@
               vy: Math.sin(angle) * speed,
               r: Math.random() * 2.2 + 0.8,
               life: 1,
-              decay: Math.random() * 0.02 + 0.01
+              decay: Math.random() * 0.02 + 0.01,
             });
           }
         }
 
         // Mouse trail
-        let lastX = w / 2;
-        let lastY = h / 2;
-
         window.addEventListener(
           "mousemove",
-          (e) => {
-            lastX = e.clientX;
-            lastY = e.clientY;
-            addSpark(lastX, lastY, 2, 1.2);
-          },
+          (e) => addSpark(e.clientX, e.clientY, 2, 1.2),
           { passive: true }
         );
 
         // Click burst
         window.addEventListener(
           "click",
-          (e) => {
-            addSpark(e.clientX, e.clientY, 28, 3.2);
-          },
+          (e) => addSpark(e.clientX, e.clientY, 28, 3.2),
           { passive: true }
         );
 
         // Animation loop
         function tick() {
-          // Clear with a slight "fade" for trail effect
           ctx.clearRect(0, 0, w, h);
 
-          // Draw particles
           for (let i = particles.length - 1; i >= 0; i--) {
             const p = particles[i];
 
@@ -187,20 +214,18 @@
               continue;
             }
 
-            // Soft glow dot
+            // soft glow dot
             ctx.globalAlpha = Math.max(0, p.life);
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(99, 102, 241, 0.55)"; /* indigo-ish */
+            ctx.fillStyle = "rgba(99, 102, 241, 0.55)";
             ctx.fill();
           }
 
           ctx.globalAlpha = 1;
-
           requestAnimationFrame(tick);
         }
 
-        // Start
         tick();
       })();
     </script>
