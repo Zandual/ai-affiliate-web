@@ -5,14 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
     <!--
-      IMPORTANT RULES (Cloudflare Pages + your app bundle)
-      ----------------------------------------------------
-      1) Keep <div id="root"></div> (React mounts here).
-      2) Keep BOTH bundle scripts:
-         - index.<hash>.js  (main web bundle)
-         - AppEntry-<hash>.js (Expo entry)
-      3) If products disappear, check DevTools -> Network:
-         - If you see 404 for index.<hash>.js, React never runs.
+      WHY PRODUCTS AREN'T SHOWING (the real reason)
+      --------------------------------------------
+      Your spark background works because it's INLINE JavaScript below.
+      Your product cards require React/Expo to mount into <div id="root"></div>.
+
+      If React never mounts, you’ll see:
+        - background works ✅
+        - product cards missing ❌
+
+      The most common cause on Cloudflare Pages:
+        - You hardcoded a hashed bundle filename like index.ABC123.js
+        - A later build/export generates a different hash
+        - The old file doesn't exist on the deployed site → 404 → app never runs
+
+      FIX:
+        - Use STABLE filenames (index.js, AppEntry.js)
+        - Rename/copy your hashed bundle files to these stable names
     -->
 
     <!-- Helps relative links behave on Cloudflare Pages -->
@@ -21,15 +30,16 @@
     <title>AI Affiliate</title>
 
     <!--
-      ✅ Use ROOT-RELATIVE paths (start with /)
-      Why? Because /index... always means "from the site root",
-      which prevents weird path issues (like /something/index...).
-      
-      ⚠️ VERY IMPORTANT:
-      The filename must match EXACTLY what exists in your GitHub repo.
-      If you renamed or regenerated bundles, update the filename here.
+      ✅ STABLE APP BUNDLES (recommended)
+      ---------------------------------
+      IMPORTANT: These files MUST exist in your repo at the site root:
+
+        /index.js      (copy/rename from your hashed index.*.js bundle)
+        /AppEntry.js   (copy/rename from your hashed AppEntry-*.js bundle)
+
+      This prevents "hash drift" causing 404s after rebuilds.
     -->
-    <script src="/index.DRTaNfeK.js" defer></script>
+    <script src="/index.js" defer></script>
 
     <style>
       /* ====== Page baseline ====== */
@@ -119,8 +129,8 @@
     <!-- React mounts here -->
     <div id="root"></div>
 
-    <!-- Expo AppEntry bundle (also root-relative) -->
-    <script src="/AppEntry-ff4ae59a90a1b1b6314d086b5393f432.js" defer></script>
+    <!-- Expo AppEntry bundle (stable name) -->
+    <script src="/AppEntry.js" defer></script>
 
     <script>
       /**
