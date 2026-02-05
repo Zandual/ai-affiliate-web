@@ -74,19 +74,28 @@
       #spark-canvas {
         position: fixed;
         inset: 0;
-        width: 100%;
-        height: 100%;
         z-index: 0;
-
         /* CRITICAL: canvas never blocks clicking/scrolling */
         pointer-events: none;
       }
 
-      /* ====== App layer ====== */
+      /* ====== App layer ======
+         EDUCATIONAL NOTE:
+         React Native Web layouts can end up inside absolutely positioned
+         wrappers or "0 height" flex containers if the root doesn't have
+         a solid sizing context.
+      */
       #root {
         position: relative;
-        z-index: 1; /* App always above the canvas */
-        min-height: 100%;
+        z-index: 2; /* ensure app is above spark canvas */
+        min-height: 100vh; /* true viewport height, not % based */
+        width: 100%;
+        overflow: visible; /* don't clip children */
+      }
+
+      /* If a parent sets display:flex, make sure root can actually expand */
+      body {
+        min-height: 100vh;
       }
 
       /* ====== Hint pill ====== */
