@@ -6,56 +6,57 @@
     <base href="/" />
     <title>AI Affiliate</title>
 
+    <!-- Optional: remove favicon.ico 404 noise -->
+    <link rel="icon" href="data:," />
+
     <style>
-      /* ====== Baseline ====== */
-      html, body, #root { 
-        height: 100%; 
-        margin: 0; 
+      /* =========================================================
+         RN Web / Expo: layout rules the app expects
+         ---------------------------------------------------------
+         Why this matters:
+         React Native Web often lays out screens using flex.
+         If #root has no height / not flex, screens can collapse or
+         become non-scrollable -> "blank page" illusion.
+      ========================================================== */
+      html, body {
+        height: 100%;
+        margin: 0;
       }
 
-      /* RN Web / Expo Layout container */
+      /* #root is the mount point for the Expo bundle */
       #root {
-        display: flex;
+        min-height: 100vh;          /* ensures content can be taller than the viewport */
+        display: flex;              /* enables RN Web flex layouts */
         flex-direction: column;
       }
 
+      /* Page background (safe) */
       body {
-        background: radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.12), transparent 50%),
-                    radial-gradient(1000px 700px at 80% 30%, rgba(255,140,200,0.10), transparent 55%),
-                    radial-gradient(900px 800px at 30% 80%, rgba(120,255,200,0.10), transparent 60%),
-                    #ffffff;
-        overflow-x: hidden;
-        min-height: 100vh;
+        background:
+          radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.12), transparent 50%),
+          radial-gradient(1000px 700px at 80% 30%, rgba(255,140,200,0.10), transparent 55%),
+          radial-gradient(900px 800px at 30% 80%, rgba(120,255,200,0.10), transparent 60%),
+          #ffffff;
+        overflow-x: hidden; /* allow normal vertical scroll */
       }
 
-      /* ====== Spark canvas behind everything ====== */
+      /* =========================================================
+         Spark canvas: purely decorative, never blocks the app
+      ========================================================== */
       #spark-canvas {
         position: fixed;
         inset: 0;
-        z-index: 0;
-        pointer-events: none; /* cannot block clicks */
+        z-index: -1;          /* behind the app */
+        pointer-events: none; /* cannot block clicks/taps */
       }
 
-      /* ====== App mounts here ======
-         Educational note:
-         DO NOT style #root’s direct children for Expo/React Native Web.
-         The app often relies on a full-screen flex container as the first child.
-         Styling #root > * can clip/hide scroll regions and content.
-      */
-      #root {
-        position: relative;
-        z-index: 2;
-        min-height: 100vh;
-        width: 100%;
-      }
-
-      /* ====== Hint pill ====== */
+      /* Hint pill (also non-blocking) */
       #spark-hint {
         position: fixed;
         top: 10px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 3;
+        z-index: 9999;
         font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         background: rgba(255, 255, 255, 0.85);
         border: 1px solid rgba(0, 0, 0, 0.08);
@@ -68,23 +69,6 @@
         color: #222;
       }
 
-      /* ====== Debug badge (temporary) ======
-         Shows whether /products returned items, even if cards are off-screen/hidden.
-      */
-      #products-debug {
-        position: fixed;
-        right: 12px;
-        bottom: 12px;
-        z-index: 9999;
-        font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        background: rgba(0,0,0,0.72);
-        color: #fff;
-        padding: 8px 10px;
-        border-radius: 10px;
-        max-width: 320px;
-        white-space: pre;
-      }
-
       @media (prefers-reduced-motion: reduce) {
         #spark-hint { display: none; }
       }
@@ -94,105 +78,117 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
+    <!-- Decorative layer (independent of the app) -->
     <canvas id="spark-canvas" aria-hidden="true"></canvas>
     <div id="spark-hint">Move your mouse ✨ click to “spark” the background</div>
 
-    <!-- React mounts here -->
+    <!-- Expo/React Native Web mounts here -->
     <div id="root"></div>
 
-    <!-- Load Expo AppEntry ONCE -->
+    <!-- Load Expo AppEntry -->
     <script src="/AppEntry.js" defer></script>
 
     <script>
       /**
        * Spark Background (safe + non-blocking)
+       * ----------------------------------------------------------
+       * Educational notes:
+       * - This script NEVER touches #root or its children.
+       * - It only draws to a separate <canvas> with pointer-events:none.
+       * - Wrapped in an IIFE + try/catch so it can't "take down" the page.
        */
       (function () {
-        const reduceMotion =
-          window.matchMedia &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        try {
+          const reduceMotion =
+            window.matchMedia &&
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-        if (reduceMotion) {
-          const hint = document.getElementById("spark-hint");
-          if (hint) hint.remove();
-          return;
-        }
+          if (reduceMotion) return;
 
-        const canvas = document.getElementById("spark-canvas");
-        if (!canvas) return;
+          const canvas = document.getElementById("spark-canvas");
+          if (!canvas) return;
 
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
 
-        let w = 0, h = 0, dpr = 1;
+          let w = 0, h = 0, dpr = 1;
 
-        function resize() {
-          dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-          w = Math.floor(window.innerWidth);
-          h = Math.floor(window.innerHeight);
-          canvas.width = Math.floor(w * dpr);
-          canvas.height = Math.floor(h * dpr);
-          canvas.style.width = w + "px";
-          canvas.style.height = h + "px";
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-
-        window.addEventListener("resize", resize, { passive: true });
-        resize();
-
-        const particles = [];
-        const MAX_PARTICLES = 260;
-
-        const mouse = { x: w * 0.5, y: h * 0.4, vx: 0, vy: 0, lastX: w * 0.5, lastY: h * 0.4 };
-
-        window.addEventListener("mousemove", (e) => {
-          const x = e.clientX, y = e.clientY;
-          mouse.vx = x - mouse.lastX;
-          mouse.vy = y - mouse.lastY;
-          mouse.lastX = x; mouse.lastY = y;
-          mouse.x = x; mouse.y = y;
-          spawn(x, y, 2, 0.8);
-        }, { passive: true });
-
-        window.addEventListener("click", (e) => spawn(e.clientX, e.clientY, 28, 2.6));
-
-        function spawn(x, y, count, power) {
-          for (let i = 0; i < count; i++) {
-            if (particles.length >= MAX_PARTICLES) particles.shift();
-            const angle = Math.random() * Math.PI * 2;
-            const speed = (0.6 + Math.random() * 1.6) * power;
-
-            particles.push({
-              x, y,
-              vx: Math.cos(angle) * speed + mouse.vx * 0.03,
-              vy: Math.sin(angle) * speed + mouse.vy * 0.03,
-              r: 1 + Math.random() * 3.5,
-              life: 1,
-              decay: 0.012 + Math.random() * 0.02,
-              hue: 210 + Math.random() * 80
-            });
+          function resize() {
+            dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+            w = Math.floor(window.innerWidth);
+            h = Math.floor(window.innerHeight);
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            canvas.style.width = w + "px";
+            canvas.style.height = h + "px";
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
           }
-        }
 
-        function draw() {
-          ctx.clearRect(0, 0, w, h);
-          for (let i = particles.length - 1; i >= 0; i--) {
-            const p = particles[i];
-            p.x += p.vx; p.y += p.vy;
-            p.vx *= 0.98; p.vy *= 0.98;
-            p.life -= p.decay;
+          window.addEventListener("resize", resize, { passive: true });
+          resize();
 
-            if (p.life <= 0) { particles.splice(i, 1); continue; }
+          const particles = [];
+          const MAX_PARTICLES = 260;
 
-            const alpha = Math.max(0, Math.min(1, p.life));
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = `hsla(${p.hue}, 85%, 65%, ${alpha * 0.9})`;
-            ctx.fill();
+          const mouse = {
+            x: w * 0.5, y: h * 0.4,
+            vx: 0, vy: 0,
+            lastX: w * 0.5, lastY: h * 0.4
+          };
+
+          window.addEventListener("mousemove", (e) => {
+            const x = e.clientX, y = e.clientY;
+            mouse.vx = x - mouse.lastX;
+            mouse.vy = y - mouse.lastY;
+            mouse.lastX = x; mouse.lastY = y;
+            mouse.x = x; mouse.y = y;
+            spawn(x, y, 2, 0.8);
+          }, { passive: true });
+
+          window.addEventListener("click", (e) => spawn(e.clientX, e.clientY, 28, 2.6));
+
+          function spawn(x, y, count, power) {
+            for (let i = 0; i < count; i++) {
+              if (particles.length >= MAX_PARTICLES) particles.shift();
+              const angle = Math.random() * Math.PI * 2;
+              const speed = (0.6 + Math.random() * 1.6) * power;
+
+              particles.push({
+                x, y,
+                vx: Math.cos(angle) * speed + mouse.vx * 0.03,
+                vy: Math.sin(angle) * speed + mouse.vy * 0.03,
+                r: 1 + Math.random() * 3.5,
+                life: 1,
+                decay: 0.012 + Math.random() * 0.02,
+                hue: 210 + Math.random() * 80
+              });
+            }
           }
-          requestAnimationFrame(draw);
+
+          function draw() {
+            ctx.clearRect(0, 0, w, h);
+            for (let i = particles.length - 1; i >= 0; i--) {
+              const p = particles[i];
+              p.x += p.vx; p.y += p.vy;
+              p.vx *= 0.98; p.vy *= 0.98;
+              p.life -= p.decay;
+
+              if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+              const alpha = Math.max(0, Math.min(1, p.life));
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+              ctx.fillStyle = `hsla(${p.hue}, 85%, 65%, ${alpha * 0.9})`;
+              ctx.fill();
+            }
+            requestAnimationFrame(draw);
+          }
+
+          draw();
+        } catch (err) {
+          // If anything goes wrong, fail silently so the app still works.
+          console.warn("Spark background disabled due to error:", err);
         }
-        draw();
       })();
     </script>
   </body>
