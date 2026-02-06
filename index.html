@@ -4,42 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-    <!--
-      WHY PRODUCTS AREN'T SHOWING (the real reason)
-      --------------------------------------------
-      Your spark background works because it's INLINE JavaScript below.
-      Your product cards require React/Expo to mount into <div id="root"></div>.
-
-      If React never mounts, you’ll see:
-        - background works ✅
-        - product cards missing ❌
-
-      The most common cause on Cloudflare Pages:
-        - You hardcoded a hashed bundle filename like index.ABC123.js
-        - A later build/export generates a different hash
-        - The old file doesn't exist on the deployed site → 404 → app never runs
-
-      FIX:
-        - Use STABLE filenames (index.js, AppEntry.js)
-        - Rename/copy your hashed bundle files to these stable names
-    -->
-
     <!-- Helps relative links behave on Cloudflare Pages -->
     <base href="/" />
 
     <title>AI Affiliate</title>
-
-    <!--
-      ✅ STABLE APP BUNDLES (recommended)
-      ---------------------------------
-      IMPORTANT: These files MUST exist in your repo at the site root:
-
-        /index.js      (copy/rename from your hashed index.*.js bundle)
-        /AppEntry.js   (copy/rename from your hashed AppEntry-*.js bundle)
-
-      This prevents "hash drift" causing 404s after rebuilds.
-    -->
-    <script src="/AppEntry.js" defer></script>
 
     <style>
       /* ====== Page baseline ====== */
@@ -50,7 +18,6 @@
       }
 
       body {
-        /* Soft gradient so the spark effect feels “premium” */
         background: radial-gradient(
             1200px 800px at 20% 20%,
             rgba(120, 150, 255, 0.12),
@@ -67,35 +34,39 @@
             transparent 60%
           ),
           #ffffff;
+
         overflow-x: hidden;
+        min-height: 100vh;
       }
 
-      /* ====== Spark background layer ====== */
+      /* ====== Spark background layer ======
+         Educational note:
+         We keep the canvas behind everything and non-interactive so it can NEVER block the UI.
+      */
       #spark-canvas {
         position: fixed;
         inset: 0;
         z-index: 0;
-        /* CRITICAL: canvas never blocks clicking/scrolling */
         pointer-events: none;
       }
 
       /* ====== App layer ======
-         EDUCATIONAL NOTE:
-         React Native Web layouts can end up inside absolutely positioned
-         wrappers or "0 height" flex containers if the root doesn't have
-         a solid sizing context.
+         Educational note:
+         Some React Native Web layouts can collapse if the root doesn't get a strong sizing context.
       */
       #root {
         position: relative;
-        z-index: 2; /* ensure app is above spark canvas */
-        min-height: 100vh; /* true viewport height, not % based */
+        z-index: 2;
+        min-height: 100vh;
         width: 100%;
-        overflow: visible; /* don't clip children */
+        overflow: visible;
       }
 
-      /* If a parent sets display:flex, make sure root can actually expand */
-      body {
-        min-height: 100vh;
+      /* Optional: add some breathing room so content isn't flush to edges */
+      #root > * {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 72px 16px 32px; /* top padding leaves room for the hint pill */
       }
 
       /* ====== Hint pill ====== */
@@ -104,7 +75,7 @@
         top: 10px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 2;
+        z-index: 3;
         font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         background: rgba(255, 255, 255, 0.85);
         border: 1px solid rgba(0, 0, 0, 0.08);
@@ -117,7 +88,6 @@
         color: #222;
       }
 
-      /* Accessibility: reduce motion */
       @media (prefers-reduced-motion: reduce) {
         #spark-hint {
           display: none;
@@ -138,14 +108,18 @@
     <!-- React mounts here -->
     <div id="root"></div>
 
-    <!-- Expo AppEntry bundle (stable name) -->
+    <!--
+      ✅ IMPORTANT FIX:
+      Load AppEntry ONCE (not twice).
+      Double-loading AppEntry can mount/unmount or wipe state and look like a blank page.
+    -->
     <script src="/AppEntry.js" defer></script>
 
     <script>
       /**
        * Spark Background (safe + non-blocking)
-       * - Canvas is BEHIND the app (z-index 0)
-       * - pointer-events:none so it can't break the UI
+       * - Canvas is behind the app (z-index: 0)
+       * - pointer-events:none so it cannot block UI
        * - requestAnimationFrame for smooth animation
        * - respects prefers-reduced-motion
        */
