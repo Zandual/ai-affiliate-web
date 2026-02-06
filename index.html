@@ -8,7 +8,16 @@
 
     <style>
       /* ====== Baseline ====== */
-      html, body { height: 100%; margin: 0; }
+      html, body, #root { 
+        height: 100%; 
+        margin: 0; 
+      }
+
+      /* RN Web / Expo Layout container */
+      #root {
+        display: flex;
+        flex-direction: column;
+      }
 
       body {
         background: radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.12), transparent 50%),
