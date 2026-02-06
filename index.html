@@ -91,54 +91,6 @@
     <!-- React mounts here -->
     <div id="root"></div>
 
-    <!-- Debug badge (safe to remove later) -->
-    <div id="products-debug">Products: (waiting for fetch...)</div>
-
-    <script>
-      /**
-       * EDUCATIONAL NOTE: "Fetch tap" debugger
-       * We wrap window.fetch BEFORE AppEntry loads.
-       * - When /products returns, we read a CLONE of the response
-       *   (so the app can still read the original response normally).
-       * - We update the debug badge with the number of items found.
-       */
-      (function () {
-        const badge = document.getElementById("products-debug");
-        const originalFetch = window.fetch.bind(window);
-
-        window.fetch = async function (input, init) {
-          const res = await originalFetch(input, init);
-
-          try {
-            const url = typeof input === "string" ? input : (input && input.url) || "";
-            if (badge && url.includes("products")) {
-              const ct = res.headers.get("content-type") || "";
-              if (ct.includes("application/json")) {
-                const data = await res.clone().json();
-
-                const items =
-                  Array.isArray(data) ? data
-                  : Array.isArray(data?.items) ? data.items
-                  : Array.isArray(data?.products) ? data.products
-                  : [];
-
-                badge.textContent =
-                  `Products: ${items.length}\n` +
-                  `Endpoint: ${url}\n` +
-                  `First item: ${items[0]?.title || items[0]?.name || "(none)"}`;
-              } else {
-                badge.textContent = `Products: (non-JSON response)\nEndpoint: ${url}`;
-              }
-            }
-          } catch (e) {
-            if (badge) badge.textContent = `Products: (debug parse failed)\n${String(e)}`;
-          }
-
-          return res;
-        };
-      })();
-    </script>
-
     <!-- Load Expo AppEntry ONCE -->
     <script src="/AppEntry.js" defer></script>
 
