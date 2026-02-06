@@ -3,70 +3,41 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-
-    <!-- Helps relative links behave on Cloudflare Pages -->
     <base href="/" />
-
     <title>AI Affiliate</title>
 
     <style>
-      /* ====== Page baseline ====== */
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
+      /* ====== Baseline ====== */
+      html, body { height: 100%; margin: 0; }
 
       body {
-        background: radial-gradient(
-            1200px 800px at 20% 20%,
-            rgba(120, 150, 255, 0.12),
-            transparent 50%
-          ),
-          radial-gradient(
-            1000px 700px at 80% 30%,
-            rgba(255, 140, 200, 0.10),
-            transparent 55%
-          ),
-          radial-gradient(
-            900px 800px at 30% 80%,
-            rgba(120, 255, 200, 0.10),
-            transparent 60%
-          ),
-          #ffffff;
-
+        background: radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.12), transparent 50%),
+                    radial-gradient(1000px 700px at 80% 30%, rgba(255,140,200,0.10), transparent 55%),
+                    radial-gradient(900px 800px at 30% 80%, rgba(120,255,200,0.10), transparent 60%),
+                    #ffffff;
         overflow-x: hidden;
         min-height: 100vh;
       }
 
-      /* ====== Spark background layer ======
-         Educational note:
-         We keep the canvas behind everything and non-interactive so it can NEVER block the UI.
-      */
+      /* ====== Spark canvas behind everything ====== */
       #spark-canvas {
         position: fixed;
         inset: 0;
         z-index: 0;
-        pointer-events: none;
+        pointer-events: none; /* cannot block clicks */
       }
 
-      /* ====== App layer ======
+      /* ====== App mounts here ======
          Educational note:
-         Some React Native Web layouts can collapse if the root doesn't get a strong sizing context.
+         DO NOT style #root’s direct children for Expo/React Native Web.
+         The app often relies on a full-screen flex container as the first child.
+         Styling #root > * can clip/hide scroll regions and content.
       */
       #root {
         position: relative;
         z-index: 2;
         min-height: 100vh;
         width: 100%;
-        overflow: visible;
-      }
-
-      /* Optional: add some breathing room so content isn't flush to edges */
-      #root > * {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 72px 16px 32px; /* top padding leaves room for the hint pill */
       }
 
       /* ====== Hint pill ====== */
@@ -88,10 +59,25 @@
         color: #222;
       }
 
+      /* ====== Debug badge (temporary) ======
+         Shows whether /products returned items, even if cards are off-screen/hidden.
+      */
+      #products-debug {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 9999;
+        font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        background: rgba(0,0,0,0.72);
+        color: #fff;
+        padding: 8px 10px;
+        border-radius: 10px;
+        max-width: 320px;
+        white-space: pre;
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        #spark-hint {
-          display: none;
-        }
+        #spark-hint { display: none; }
       }
     </style>
   </head>
@@ -99,29 +85,66 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
-    <!-- Background canvas (non-blocking) -->
     <canvas id="spark-canvas" aria-hidden="true"></canvas>
-
-    <!-- Tiny hint -->
     <div id="spark-hint">Move your mouse ✨ click to “spark” the background</div>
 
     <!-- React mounts here -->
     <div id="root"></div>
 
-    <!--
-      ✅ IMPORTANT FIX:
-      Load AppEntry ONCE (not twice).
-      Double-loading AppEntry can mount/unmount or wipe state and look like a blank page.
-    -->
+    <!-- Debug badge (safe to remove later) -->
+    <div id="products-debug">Products: (waiting for fetch...)</div>
+
+    <script>
+      /**
+       * EDUCATIONAL NOTE: "Fetch tap" debugger
+       * We wrap window.fetch BEFORE AppEntry loads.
+       * - When /products returns, we read a CLONE of the response
+       *   (so the app can still read the original response normally).
+       * - We update the debug badge with the number of items found.
+       */
+      (function () {
+        const badge = document.getElementById("products-debug");
+        const originalFetch = window.fetch.bind(window);
+
+        window.fetch = async function (input, init) {
+          const res = await originalFetch(input, init);
+
+          try {
+            const url = typeof input === "string" ? input : (input && input.url) || "";
+            if (badge && url.includes("products")) {
+              const ct = res.headers.get("content-type") || "";
+              if (ct.includes("application/json")) {
+                const data = await res.clone().json();
+
+                const items =
+                  Array.isArray(data) ? data
+                  : Array.isArray(data?.items) ? data.items
+                  : Array.isArray(data?.products) ? data.products
+                  : [];
+
+                badge.textContent =
+                  `Products: ${items.length}\n` +
+                  `Endpoint: ${url}\n` +
+                  `First item: ${items[0]?.title || items[0]?.name || "(none)"}`;
+              } else {
+                badge.textContent = `Products: (non-JSON response)\nEndpoint: ${url}`;
+              }
+            }
+          } catch (e) {
+            if (badge) badge.textContent = `Products: (debug parse failed)\n${String(e)}`;
+          }
+
+          return res;
+        };
+      })();
+    </script>
+
+    <!-- Load Expo AppEntry ONCE -->
     <script src="/AppEntry.js" defer></script>
 
     <script>
       /**
        * Spark Background (safe + non-blocking)
-       * - Canvas is behind the app (z-index: 0)
-       * - pointer-events:none so it cannot block UI
-       * - requestAnimationFrame for smooth animation
-       * - respects prefers-reduced-motion
        */
       (function () {
         const reduceMotion =
@@ -140,9 +163,7 @@
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        let w = 0,
-          h = 0,
-          dpr = 1;
+        let w = 0, h = 0, dpr = 1;
 
         function resize() {
           dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -161,74 +182,46 @@
         const particles = [];
         const MAX_PARTICLES = 260;
 
-        const mouse = {
-          x: w * 0.5,
-          y: h * 0.4,
-          vx: 0,
-          vy: 0,
-          lastX: w * 0.5,
-          lastY: h * 0.4,
-        };
+        const mouse = { x: w * 0.5, y: h * 0.4, vx: 0, vy: 0, lastX: w * 0.5, lastY: h * 0.4 };
 
-        window.addEventListener(
-          "mousemove",
-          (e) => {
-            const x = e.clientX;
-            const y = e.clientY;
+        window.addEventListener("mousemove", (e) => {
+          const x = e.clientX, y = e.clientY;
+          mouse.vx = x - mouse.lastX;
+          mouse.vy = y - mouse.lastY;
+          mouse.lastX = x; mouse.lastY = y;
+          mouse.x = x; mouse.y = y;
+          spawn(x, y, 2, 0.8);
+        }, { passive: true });
 
-            mouse.vx = x - mouse.lastX;
-            mouse.vy = y - mouse.lastY;
-
-            mouse.lastX = x;
-            mouse.lastY = y;
-
-            mouse.x = x;
-            mouse.y = y;
-
-            spawn(x, y, 2, 0.8);
-          },
-          { passive: true }
-        );
-
-        window.addEventListener("click", (e) => {
-          spawn(e.clientX, e.clientY, 28, 2.6);
-        });
+        window.addEventListener("click", (e) => spawn(e.clientX, e.clientY, 28, 2.6));
 
         function spawn(x, y, count, power) {
           for (let i = 0; i < count; i++) {
             if (particles.length >= MAX_PARTICLES) particles.shift();
-
             const angle = Math.random() * Math.PI * 2;
             const speed = (0.6 + Math.random() * 1.6) * power;
 
             particles.push({
-              x,
-              y,
+              x, y,
               vx: Math.cos(angle) * speed + mouse.vx * 0.03,
               vy: Math.sin(angle) * speed + mouse.vy * 0.03,
               r: 1 + Math.random() * 3.5,
               life: 1,
               decay: 0.012 + Math.random() * 0.02,
-              hue: 210 + Math.random() * 80,
+              hue: 210 + Math.random() * 80
             });
           }
         }
 
         function draw() {
           ctx.clearRect(0, 0, w, h);
-
           for (let i = particles.length - 1; i >= 0; i--) {
             const p = particles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vx *= 0.98;
-            p.vy *= 0.98;
-
+            p.x += p.vx; p.y += p.vy;
+            p.vx *= 0.98; p.vy *= 0.98;
             p.life -= p.decay;
-            if (p.life <= 0) {
-              particles.splice(i, 1);
-              continue;
-            }
+
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
 
             const alpha = Math.max(0, Math.min(1, p.life));
             ctx.beginPath();
@@ -236,10 +229,8 @@
             ctx.fillStyle = `hsla(${p.hue}, 85%, 65%, ${alpha * 0.9})`;
             ctx.fill();
           }
-
           requestAnimationFrame(draw);
         }
-
         draw();
       })();
     </script>
