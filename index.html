@@ -65,6 +65,15 @@
         z-index: 1; /* keep the app above the canvas */
       }
 
+      /* --- Make sure the animated background can be seen behind the RN Web app --- */
+      #root { background: transparent !important; }
+
+      /* RN Web often renders a full-screen wrapper div as the first child of #root */
+      #root > div { background: transparent !important; }
+
+      /* Safety net: some RN Web views apply inline background-color */
+      #root [style*="background-color"] { background-color: transparent !important; }
+
       /* Hint pill (also non-blocking) */
       #spark-hint {
         position: fixed;
