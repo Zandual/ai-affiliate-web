@@ -31,12 +31,23 @@
       }
 
       /* Page background (safe) */
-      body {
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;             /* behind everything */
+        pointer-events: none;    /* never blocks clicks */
+
         background:
-          radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.12), transparent 50%),
-          radial-gradient(1000px 700px at 80% 30%, rgba(255,140,200,0.10), transparent 55%),
-          radial-gradient(900px 800px at 30% 80%, rgba(120,255,200,0.10), transparent 60%),
-          #ffffff;
+          radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.16), transparent 55%),
+          radial-gradient(1000px 700px at 80% 30%, rgba(255,140,200,0.14), transparent 60%),
+          radial-gradient(900px 800px at 30% 80%, rgba(120,255,200,0.12), transparent 65%),
+          linear-gradient(120deg, rgba(255,255,255,0.85), rgba(255,255,255,0.85));
+
+        background-size: 160% 160%;
+        animation: bg-drift 18s ease-in-out infinite;
+        filter: saturate(1.1);
+        
         overflow-x: hidden; /* allow normal vertical scroll */
       }
 
