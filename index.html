@@ -47,8 +47,6 @@
         background-size: 160% 160%;
         animation: bg-drift 18s ease-in-out infinite;
         filter: saturate(1.1);
-        
-        overflow-x: hidden; /* allow normal vertical scroll */
       }
 
       /* =========================================================
@@ -86,7 +84,19 @@
         color: #222;
       }
 
+      /* Smooth animated drift for the gradient background */
+      @keyframes bg-drift {
+        0%   { background-position: 0% 0%,   100% 0%,  0% 100%, 0% 0%; }
+        50%  { background-position: 60% 40%, 30% 20%, 70% 60%, 0% 0%; }
+        100% { background-position: 0% 0%,   100% 0%,  0% 100%, 0% 0%; }
+      }
+
+      /* Put overflow control on the real page, not the pseudo-element */
+      body { overflow-x: hidden; } /* allow normal vertical scroll */
+
+      /* Respect reduced-motion users */
       @media (prefers-reduced-motion: reduce) {
+        body::before { animation: none; }
         #spark-hint { display: none; }
       }
     </style>
