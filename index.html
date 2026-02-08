@@ -45,7 +45,7 @@
           linear-gradient(120deg, rgba(255,255,255,0.85), rgba(255,255,255,0.85));
 
         background-size: 160% 160%;
-        animation: bg-drift 18s ease-in-out infinite;
+        animation: bg-drift 12s ease-in-out infinite; /* level of drift in the background */
         filter: saturate(1.1);
       }
 
@@ -55,9 +55,9 @@
       #spark-canvas {
         position: fixed;
         inset: 0;
-        z-index: 5;          /* visible above the background */
-        pointer-events: none; /* cannot block clicks/taps */
-        opacity: 0.25; /* more dramatic background glow */
+        z-index: 5;            /* visible above the background */
+        pointer-events: none;  /* cannot block clicks/taps */
+        opacity: 1.00;         /* more dramatic background glow */
       }
 
       #root {
