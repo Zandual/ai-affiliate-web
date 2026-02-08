@@ -6,37 +6,38 @@
     <base href="/" />
     <title>AI Affiliate</title>
 
-    <!-- Optional: remove favicon.ico 404 noise -->
     <link rel="icon" href="data:," />
 
     <style>
       /* =========================================================
          RN Web / Expo: layout rules the app expects
-         ---------------------------------------------------------
-         Why this matters:
-         React Native Web often lays out screens using flex.
-         If #root has no height / not flex, screens can collapse or
-         become non-scrollable -> "blank page" illusion.
       ========================================================== */
       html, body {
         height: 100%;
         margin: 0;
       }
 
-      /* #root is the mount point for the Expo bundle */
       #root {
-        min-height: 100vh;          /* ensures content can be taller than the viewport */
-        display: flex;              /* enables RN Web flex layouts */
+        min-height: 100vh;
+        display: flex;
         flex-direction: column;
+        position: relative;
+        z-index: 1;
+        background: transparent !important;
       }
 
-      /* Page background (safe) */
+      #root > div { background: transparent !important; }
+      #root [style*="background-color"] { background-color: transparent !important; }
+
+      /* =========================================================
+         Animated background layer (safe)
+      ========================================================== */
       body::before {
         content: "";
         position: fixed;
         inset: 0;
-        z-index: -2;             /* behind everything */
-        pointer-events: none;    /* never blocks clicks */
+        z-index: -2;
+        pointer-events: none;
 
         background:
           radial-gradient(1200px 800px at 20% 20%, rgba(120,150,255,0.16), transparent 55%),
@@ -45,36 +46,29 @@
           linear-gradient(120deg, rgba(255,255,255,0.85), rgba(255,255,255,0.85));
 
         background-size: 160% 160%;
-        animation: bg-drift 12s ease-in-out infinite; /* level of drift in the background */
+        animation: bg-drift 12s ease-in-out infinite;
         filter: saturate(1.1);
       }
 
+      @keyframes bg-drift {
+        0%   { background-position: 0% 0%,   100% 0%,  0% 100%, 0% 0%; }
+        50%  { background-position: 60% 40%, 30% 20%, 70% 60%, 0% 0%; }
+        100% { background-position: 0% 0%,   100% 0%,  0% 100%, 0% 0%; }
+      }
+
+      body { overflow-x: hidden; }
+
       /* =========================================================
-         Spark canvas: purely decorative, never blocks the app
+         Spark canvas (visual only, no click blocking)
       ========================================================== */
       #spark-canvas {
         position: fixed;
         inset: 0;
-        z-index: 5;            /* visible above the background */
-        pointer-events: none;  /* cannot block clicks/taps */
-        opacity: 1.00;         /* more dramatic background glow */
+        z-index: 5;
+        pointer-events: none;
+        opacity: 0.55;
       }
 
-      #root {
-        position: relative;
-        z-index: 1; /* keep the app above the canvas */
-      }
-
-      /* --- Make sure the animated background can be seen behind the RN Web app --- */
-      #root { background: transparent !important; }
-
-      /* RN Web often renders a full-screen wrapper div as the first child of #root */
-      #root > div { background: transparent !important; }
-
-      /* Safety net: some RN Web views apply inline background-color */
-      #root [style*="background-color"] { background-color: transparent !important; }
-
-      /* Hint pill (also non-blocking) */
       #spark-hint {
         position: fixed;
         top: 10px;
@@ -93,20 +87,129 @@
         color: #222;
       }
 
-      /* Smooth animated drift for the gradient background */
-      @keyframes bg-drift {
-        0%   { background-position: 0% 0%,   100% 0%,  0% 100%, 0% 0%; }
-        50%  { background-position: 60% 40%, 30% 20%, 70% 60%, 0% 0%; }
-        100% { background-position: 0% 0%,   100% 0%,  0% 100%, 0% 0%; }
-      }
-
-      /* Put overflow control on the real page, not the pseudo-element */
-      body { overflow-x: hidden; } /* allow normal vertical scroll */
-
-      /* Respect reduced-motion users */
       @media (prefers-reduced-motion: reduce) {
         body::before { animation: none; }
         #spark-hint { display: none; }
+      }
+
+      /* =========================================================
+         HOME WOW PANEL (scoped version of the CSS demo)
+         ---------------------------------------------------------
+         Educational note:
+         - We do NOT style html/body/main like the demo.
+         - Everything is scoped under #home-wow so it cannot break Expo.
+      ========================================================== */
+      #home-wow {
+        --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        --really-green: oklch(88.14% 0.203 158.82);
+        --green: oklch(78.59% 0.18 159.1);
+        --gray: oklch(92% 0 0);
+        --speed: 1200ms;
+
+        position: fixed;
+        left: 50%;
+        top: 64px;
+        transform: translateX(-50%);
+        z-index: 50;
+
+        width: min(900px, calc(100vw - 24px));
+        padding: 22px 18px 16px;
+
+        border-radius: 18px;
+        background: rgba(16, 16, 18, 0.55);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+
+        color: var(--gray);
+        font-family: var(--font);
+        text-align: center;
+        pointer-events: auto; /* allow slider interaction */
+      }
+
+      #home-wow * { font-family: inherit; }
+
+      #home-wow article {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      #home-wow h1 {
+        margin: 0;
+        color: var(--green);
+        font-size: clamp(44px, 7vw, 92px);
+        font-weight: 900;
+        letter-spacing: 0.02ch;
+      }
+
+      #home-wow h2 {
+        margin: 0;
+        font-size: clamp(14px, 2.2vw, 22px);
+        text-transform: uppercase;
+        letter-spacing: 0.12ch;
+        opacity: 0.95;
+      }
+
+      /* Letter “breath” animation */
+      #home-wow [letter-animation="breath"] > span {
+        display: inline-block;
+        white-space: break-spaces;
+        animation: breath var(--speed) ease calc(var(--index) * 100ms) infinite alternate;
+      }
+
+      @keyframes breath {
+        from { transform: none; text-shadow: none; }
+        to {
+          transform: scale(1.25) translateY(-5px);
+          text-shadow: 0 0 20px var(--really-green);
+        }
+      }
+
+      #home-wow section {
+        display: grid;
+        place-items: center;
+        gap: 10px;
+      }
+
+      #home-wow .slider-row {
+        width: min(520px, 90%);
+        display: grid;
+        gap: 8px;
+      }
+
+      #home-wow .slider-labels {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08ch;
+        opacity: 0.9;
+      }
+
+      /* Range input styling */
+      #home-wow input[type="range"] {
+        width: 100%;
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      #home-wow input[type="range"]::-webkit-slider-runnable-track {
+        background: var(--green);
+        height: 0.5rem;
+        border-radius: 12px;
+      }
+
+      #home-wow input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -12px;
+        background-color: rgba(16,16,18,0.95);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 8px;
+        height: 2rem;
+        width: 1.25rem;
       }
     </style>
   </head>
@@ -114,16 +217,89 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
 
-    <!-- Decorative layer (independent of the app) -->
+    <!-- Spark canvas + hint -->
     <canvas id="spark-canvas" aria-hidden="true"></canvas>
     <div id="spark-hint">Move your mouse ✨ click to “spark” the background</div>
+
+    <!-- HOME WOW PANEL (safe overlay) -->
+    <main id="home-wow" aria-label="Home wow panel">
+      <article>
+        <h1 split-by="letter" letter-animation="breath">HOME</h1>
+        <h2>Make the clicks feel alive</h2>
+      </article>
+
+      <section>
+        <div class="slider-row">
+          <div class="slider-labels">
+            <span>Chill</span>
+            <span>Party</span>
+          </div>
+          <input id="breathSpeed" min="100" max="2400" type="range" value="1200" />
+        </div>
+      </section>
+    </main>
 
     <!-- Expo/React Native Web mounts here -->
     <div id="root"></div>
 
-    <!-- Load Expo AppEntry -->
+    <!-- Load Expo bundle -->
     <script src="/AppEntry.js" defer></script>
 
+    <!-- Spark animation -->
     <script src="/spark.js" defer></script>
+
+    <script>
+      /**
+       * HOME WOW JS (adapted from your demo)
+       * ------------------------------------------------------------
+       * Educational notes:
+       * - Removed `export` keywords (those only work in modules/bundlers).
+       * - Scoped queries under #home-wow so we don't touch the Expo app.
+       * - Uses prefers-reduced-motion guard.
+       */
+      (function () {
+        const panel = document.getElementById("home-wow");
+        if (!panel) return;
+
+        const slider = panel.querySelector('#breathSpeed');
+        const title = panel.querySelector('[split-by="letter"]');
+        if (!slider || !title) return;
+
+        const span = (text, index) => {
+          const node = document.createElement("span");
+          node.textContent = text;
+          node.style.setProperty("--index", index);
+          return node;
+        };
+
+        const byLetter = (text) => [...text].map(span);
+
+        const motionOK = window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+
+        if (motionOK) {
+          // Split title text into spans once
+          const letters = byLetter(title.innerText);
+          title.textContent = ""; // clear
+          letters.forEach((n) => title.appendChild(n));
+        }
+
+        function onInput() {
+          panel.style.setProperty("--speed", `${slider.value}ms`);
+        }
+
+        slider.addEventListener("input", debounce(onInput, 10));
+        onInput();
+
+        function debounce(func, wait) {
+          let timeoutId;
+          return function () {
+            const context = this;
+            const args = arguments;
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(context, args), wait);
+          };
+        }
+      })();
+    </script>
   </body>
 </html>
