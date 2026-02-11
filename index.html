@@ -90,15 +90,15 @@
         --speed: 1200ms;
 
         /* Makes the panel float above the page */
-        position: fixed; /* fixed + top/left pins it to the viewport */
+        position: fixed;   /* attaches to viewport instead of page flow */
         left: 16px;
         top: 12px;
         transform: none;
-        z-index: 10000; /* ensures overlay appears above Expo content */
+        z-index: 10000;   /* ensures overlay appears above Expo content */
 
         /* Controls panel size */
-        width: 320px;
-        max-width: calc(100vw - 24px);
+        width: min(560px, calc(100vw - 24px)); /* main panel width */
+        max-width: calc(100vw - 24px);         /* prevents overflow on small screen */
         padding: 10px 12px;
 
         border-radius: 18px;
@@ -109,32 +109,32 @@
         color: var(--gray);
         font-family: var(--font);
         text-align: left;
-        pointer-events: auto; /* lets the slider be draggable even though you have other overlay layers like the canvas */
+        
+        /* Allows slider interaction even with overlay layers */
+        pointer-events: auto; 
 
-        /* This is what creates the horizontal layout */
-        display: flex; /* creates the two-column layout: (left text) + (right slider) */
-        align-items: center;
-        justify-content: space-between; /* pushes those two columns apart */
+        /* Layout engine (this is the important part) */
+        display: flex;                   /* creates horizontal layout */
+        align-items: center;             /* vertically center children */
+        justify-content: space-between;  /* left text + right slider */
         gap: 14px;
-        flex-wrap: nowrap; /* keep article + slider on one row */
+        flex-wrap: nowrap;               /* prevent wrapping */
       }
 
       #home-wow * { font-family: inherit; }
 
       #home-wow article {
         display: flex;
-        flex-direction: column; /* stack HOME and subtitle vertically */
+        flex-direction: column;  /* stack HOME and subtitle vertically */
         gap: 8px;
-        flex: 1;       /* fill remaining horizontal space as width */
-        min-width: 0;  /* flexbox quirk-fix so long text can shrink instead of forcing overflow */
+        flex: 1;                 /* fill remaining horizontal space as width */
+        min-width: 0;            /* allows text to shrink instead of overflowing */
       }
 
       #home-wow h1 {
-        margin: 0;
-        color: var(--green);
-        font-size: 40px;
-        font-weight: 900;
-        letter-spacing: 0.02ch;
+        white-space: nowrap;
+        line-height: 1;
+        font-size: clamp(30px, 4vw, 48px);
       }
 
       #home-wow h2 {
@@ -161,8 +161,8 @@
       }
 
       #home-wow section {
-        width: 200px;    /* fixed width for slider area */
-        flex: 0 0 200px; /* prevents shrinking or growing */
+        width: 180px;    /* fixed width for slider area */
+        flex: 0 0 180px; /* do not shrinking or growing- flex: don't grow don't shrink always 200px  */
       }
 
       #home-wow section div {
