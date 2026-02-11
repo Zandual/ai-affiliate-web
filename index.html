@@ -222,6 +222,35 @@
         height: 2rem;
         width: 1.25rem;
       }
+
+      /* =========================================================
+      PRODUCT CARD BUTTON — GLOW EFFECT
+      Scoped so it doesn't affect other buttons
+      ========================================================= */
+
+      .product-btn {
+        background: rgba(16,16,18,0.9);
+        border: 1px solid oklch(78.59% 0.18 159.1);
+        color: white;
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .product-btn:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 0 8px oklch(78.59% 0.18 159.1),
+          0 0 18px oklch(78.59% 0.18 159.1);
+      }
+
+      .product-btn:active {
+        transform: translateY(0px);
+        box-shadow: 0 0 6px oklch(78.59% 0.18 159.1);
+      }
     </style>
   </head>
 
