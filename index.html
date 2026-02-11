@@ -93,13 +93,12 @@
         position: fixed;   /* attaches to viewport instead of page flow */
         left: 16px;
         top: 12px;
-        transform: none;
         z-index: 10000;   /* ensures overlay appears above Expo content */
 
         /* Controls panel size */
-        width: 380px; /* main panel width */
-        max-width: calc(100vw - 24px);         /* prevents overflow on small screen */
-        padding: 10px 12px;
+        width: 360px;                    /* main panel width */
+        max-width: calc(100vw - 24px);   /* prevents overflow on small screen */
+        padding: 10px 12px;              /* inner spacing (smaller = shorter panel) */
 
         border-radius: 18px;
         background: rgba(16, 16, 18, 0.55);
@@ -115,34 +114,40 @@
 
         /* Layout engine (this is the important part) */
         display: flex;                   /* creates horizontal layout */
-        align-items: center;             /* vertically center children */
+        align-items: flex-start;         /* keeps slider from vertically centering too low */
         justify-content: space-between;  /* left text + right slider */
-        gap: 14px;
-        flex-wrap: nowrap;               /* prevent wrapping */
+        gap: 12px;
       }
 
       #home-wow * { font-family: inherit; }
 
+      /* Left column: HOME + subtitle */
       #home-wow article {
         display: flex;
         flex-direction: column;  /* stack HOME and subtitle vertically */
-        gap: 8px;
+        gap: 6px;
         flex: 1;                 /* fill remaining horizontal space as width */
-        min-width: 0;            /* allows text to shrink instead of overflowing */
+        min-width: 0;            /* allows text column to shrink without breaking layout */
       }
 
+      /* Title: shrink a bit so the panel height drops */
       #home-wow h1 {
-        white-space: nowrap;
-        line-height: 1;
-        font-size: clamp(30px, 4vw, 48px);
+        margin: 0;
+        color: var(--green);
+        font-size: 38px;         /* smaller than 48px -> reduces panel height */
+        font-weight: 900;
+        letter-spacing: 0.02ch;
+        line-height: 1;          /* tighter vertical space */
       }
 
+      /* Subtitle: keep compact */
       #home-wow h2 {
         margin: 0;
-        font-size: clamp(14px, 2.2vw, 22px);
+        font-size: 14px;            /* smaller -> more room for product card below */
         text-transform: uppercase;
         letter-spacing: 0.12ch;
         opacity: 0.95;
+        line-height: 1.2;
       }
 
       /* Letter “breath” animation */
@@ -160,9 +165,10 @@
         }
       }
 
+      /* Right column: slider area (this is what moves it to the RIGHT side) */
       #home-wow section {
-        width: 140px;    /* fixed width for slider area */
-        flex: 0 0 140px; /* do not shrinking or growing- flex: don't grow don't shrink always 200px  */
+        width: 150px;    /* slider column width */
+        flex: 0 0 150px; /* do not shrinking or growing- flex: don't grow don't shrink always 200px  */
       }
 
       #home-wow section div {
