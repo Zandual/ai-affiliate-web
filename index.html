@@ -69,23 +69,7 @@
         opacity: 0.55;
       }
 
-      #spark-hint {
-        position: fixed;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 9999;
-        font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        background: rgba(255, 255, 255, 0.85);
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        padding: 8px 12px;
-        border-radius: 999px;
-        backdrop-filter: blur(8px);
-        user-select: none;
-        pointer-events: none;
-        color: #222;
-      }
+      
 
       @media (prefers-reduced-motion: reduce) {
         body::before { animation: none; }
@@ -115,7 +99,7 @@
         z-index: 10000; /* ensures overlay appears above Expo content */
 
         /* Controls panel size */
-        width: min(620px, calc(100vw - 24px));
+        width: 520px;
         max-width: calc(100vw - 24px);
         padding: 16px 18px;
 
@@ -178,8 +162,8 @@
       }
 
       #home-wow section {
-        width: 220px;    /* fixed width for slider area */
-        flex: 0 0 220px; /* prevents shrinking or growing */
+        width: 180px;    /* fixed width for slider area */
+        flex: 0 0 180px; /* prevents shrinking or growing */
       }
 
       #home-wow section div {
