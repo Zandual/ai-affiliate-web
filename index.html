@@ -96,9 +96,9 @@
         z-index: 10000;   /* ensures overlay appears above Expo content */
 
         /* Controls panel size */
-        width: 360px;                    /* main panel width */
-        max-width: calc(100vw - 24px);   /* prevents overflow on small screen */
-        padding: 10px 12px;              /* inner spacing (smaller = shorter panel) */
+        width: 300px;                    /* main panel width */
+        max-width: calc(100vw - 16px);   /* prevents overflow on small screen */
+        padding: 10px 10px;              /* inner spacing (smaller = shorter panel) */
 
         border-radius: 18px;
         background: rgba(16, 16, 18, 0.55);
@@ -114,9 +114,10 @@
 
         /* Layout engine (this is the important part) */
         display: flex;                   /* creates horizontal layout */
-        align-items: flex-start;         /* keeps slider from vertically centering too low */
+        align-items: center;             /* keeps slider from vertically centering too low */
         justify-content: space-between;  /* left text + right slider */
-        gap: 12px;
+        gap: 10px;
+        flex-wrap: nowrap;               /* prevents stacking */
       }
 
       #home-wow * { font-family: inherit; }
@@ -134,10 +135,11 @@
       #home-wow h1 {
         margin: 0;
         color: var(--green);
-        font-size: 38px;         /* smaller than 48px -> reduces panel height */
+        font-size: 30px;         /* smaller than 48px -> reduces panel height */
         font-weight: 900;
         letter-spacing: 0.02ch;
         line-height: 1;          /* tighter vertical space */
+        overflow: visible;       /* lets glow/scale render without cutting off */
       }
 
       /* Subtitle: keep compact */
@@ -167,8 +169,8 @@
 
       /* Right column: slider area (this is what moves it to the RIGHT side) */
       #home-wow section {
-        width: 150px;    /* slider column width */
-        flex: 0 0 150px; /* do not shrinking or growing- flex: don't grow don't shrink always 200px  */
+        width: 120px;    /* slider column width */
+        flex: 0 0 120px; /* do not shrinking or growing- flex: don't grow don't shrink always 200px  */
       }
 
       #home-wow section div {
