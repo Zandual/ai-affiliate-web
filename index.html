@@ -82,7 +82,7 @@
          - Everything is scoped under #home-wow so it cannot break Expo.
       ========================================================== */
       #home-wow {
-        /* Design tokens (CSS variables) used by children) */
+        /* Design tokens (CSS variables) used by children */
         --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         --really-green: oklch(88.14% 0.203 158.82);
         --green: oklch(78.59% 0.18 159.1);
@@ -96,7 +96,7 @@
         z-index: 10000;   /* ensures overlay appears above Expo content */
 
         /* Controls panel size */
-        width: 3280px;                    /* main panel width */
+        width: clamp(340px, 42vw, 520px);                    /* main panel width */
         max-width: calc(100vw - 24px);   /* prevents overflow on small screen */
         padding: 10px 12px;              /* inner spacing (smaller = shorter panel) */
 
@@ -171,7 +171,7 @@
       /* Right column: slider area (this is what moves it to the RIGHT side) */
       #home-wow section {
         width: 130px;    /* slider column width */
-        flex: 0 0 130px; /* do not shrinking or growing- flex: don't grow don't shrink always 200px  */
+        flex: 0 0 130px; /* don't grow, don't shrink, stay 130px wide  */
       }
 
       #home-wow section div {
