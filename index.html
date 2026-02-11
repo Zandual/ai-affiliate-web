@@ -112,9 +112,9 @@
         transform: none;
         z-index: 10000;
 
-        width: 320px;
+        width: 420px;
         max-width: calc(100vw - 24px);
-        padding: 14px;
+        padding: 16px 18px;
 
         border-radius: 18px;
         background: rgba(16, 16, 18, 0.55);
@@ -130,15 +130,17 @@
       #home-wow * { font-family: inherit; }
 
       #home-wow article {
-        display: grid;
-        gap: 10px;
-        margin-bottom: 16px;
+        display: flex: 1;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        text-align: left;
       }
 
       #home-wow h1 {
         margin: 0;
         color: var(--green);
-        font-size: clamp(44px, 7vw, 92px);
+        font-size: 48px;
         font-weight: 900;
         letter-spacing: 0.02ch;
       }
@@ -167,9 +169,7 @@
       }
 
       #home-wow section {
-        display: grid;
-        place-items: center;
-        gap: 10px;
+        width: 140px;
       }
 
       #home-wow .slider-row {
