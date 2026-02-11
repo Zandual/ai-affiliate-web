@@ -100,19 +100,22 @@
          - Everything is scoped under #home-wow so it cannot break Expo.
       ========================================================== */
       #home-wow {
+        /* Design tokens (CSS variables) used by children) */
         --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         --really-green: oklch(88.14% 0.203 158.82);
         --green: oklch(78.59% 0.18 159.1);
         --gray: oklch(92% 0 0);
         --speed: 1200ms;
 
+        /* Makes the panel float above the page */
         position: fixed;
         left: 16px;
         top: 12px;
         transform: none;
-        z-index: 10000;
+        z-index: 10000; /* ensures overlay appears above Expo content */
 
-        width: 420px;
+        /* Controls panel size */
+        width: min(620px, calc(100vw - 24px));
         max-width: calc(100vw - 24px);
         padding: 16px 18px;
 
@@ -123,18 +126,24 @@
 
         color: var(--gray);
         font-family: var(--font);
-        text-align: center;
+        text-align: left;
         pointer-events: auto; /* allow slider interaction */
+
+        /* This is what creates the horizontal layout */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
       }
 
       #home-wow * { font-family: inherit; }
 
       #home-wow article {
-        display: flex: 1;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        text-align: left;
+        display: flex;
+        flex-direction: column; /* stack HOME + subtitle vertically */
+        gap: 8px;
+        flex: 1;       /* fill remaining horizontal space */
+        min-width: 0;  /* allows shrinking inside flex layout */
       }
 
       #home-wow h1 {
@@ -169,11 +178,20 @@
       }
 
       #home-wow section {
-        width: 140px;
+        width: 220px;    /* fixed width for slider area */
+        flex: 0 0 220px; /* prevents shrinking or growing */
+      }
+
+      #home-wow section div {
+        width: 100%;
+      }
+
+      #home-wow input[type="range"] {
+        width: 100%;
       }
 
       #home-wow .slider-row {
-        width: min(520px, 90%);
+        width: 100%;
         display: grid;
         gap: 8px;
       }
