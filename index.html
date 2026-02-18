@@ -235,16 +235,28 @@
         box-shadow: 0 0 18px #ff6b3d, 0 0 30px rgba(255,107,61,0.6);
       }
 
+      /* === Glow effect for the "Get Deal" CTA (React Native Web -> data-testid) === */
       @keyframes dealGlow {
-        0%, 100% { filter: drop-shadow(0 0 6px rgba(0, 255, 200, 0.45)); }
-        50% { filter: drop-shadow(0 0 18px rgba(0, 255, 200, 0.85)); }
+        0% { box-shadow: 0 0 6px rgba(255, 80, 80, 0.35), 0 0 0 rgba(255, 80, 80, 0.0); transform: translateY(0); }
+        100% { box-shadow: 0 0 18px rgba(255, 80, 80, 0.75), 0 0 38px rgba(255, 80, 80, 0.35); transform: translateY(-1px); }
       }
 
-      /* React Native Web hook */
-      [data-testid="deal-cta"],
-      #deal-cta {
-        animation: dealGlow 1.2s ease-in-out infinite;
-        border-radius: 10px;
+      /* RN Web commonly renders Pressable/Button as a div/span/button.
+         This targets whatever DOM node receives data-testid="deal-cta". */
+      [data-testid="deal-cta"] {
+        border-radius: 10px !important;
+        animation: dealGlow 1.4s ease-in-out infinite alternate !important;
+        transition: transform 120ms ease, filter 120ms ease !important;
+        will-change: transform, box-shadow;
+      }
+
+      /* Nice hover/focus "reward" */
+      [data-testid="deal-cta"]:hover {
+        filter: brightness(1.05);
+      }
+
+      [data-testid="deal-cta"]:active {
+        transform: translateY(0px) scale(0.99);
       }
     </style>
   </head>
