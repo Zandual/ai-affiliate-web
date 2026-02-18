@@ -234,6 +234,18 @@
       [aria-label="deal-cta"]:hover {
         box-shadow: 0 0 18px #ff6b3d, 0 0 30px rgba(255,107,61,0.6);
       }
+
+      @keyframes dealGlow {
+        0%, 100% { filter: drop-shadow(0 0 6px rgba(0, 255, 200, 0.45)); }
+        50% { filter: drop-shadow(0 0 18px rgba(0, 255, 200, 0.85)); }
+      }
+
+      /* React Native Web hook */
+      [data-testid="deal-cta"],
+      #deal-cta {
+        animation: dealGlow 1.2s ease-in-out infinite;
+        border-radius: 10px;
+      }
     </style>
   </head>
 
