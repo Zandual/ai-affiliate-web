@@ -82,41 +82,88 @@
          - Everything is scoped under #home-wow so it cannot break Expo.
       ========================================================== */
       #home-wow {
-        /* Design tokens (CSS variables) used by children */
+        /* =========================
+           Design tokens (CSS variables)
+           =========================
+           These are like named settings that your children elements can reuse.
+           Changing these updates everything that references them. */
         --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         --really-green: oklch(88.14% 0.203 158.82);
         --green: oklch(78.59% 0.18 159.1);
         --gray: oklch(92% 0 0);
-        --speed: 1200ms;
+        --speed: 1200ms;           /* ms = milliseconds (1200ms = 1.2 seconds) */
 
-        /* Makes the panel float above the page */
-        position: fixed;   /* attaches to viewport instead of page flow */
-        left: 16px;
-        top: 12px;
-        z-index: 10000;   /* ensures overlay appears above Expo content */
+        /* =========================
+           Positioning & stacking
+           =========================
+           position: fixed -> overlay stays in the same spot even when you scroll
+           (attached to the viewport, not the page). */
+        position: fixed;    /* attaches to viewport instead of page flow */
+        left: 50%;          /* px = fixed distance from left edge. Smaller = closer to the edge. Or, % = relative to viewport width */
+        top: 16px;          /* px = fixed distance from top edge. Larger = lower down. */
+        transform: none;    /* no centering shift by default */
+        z-index: 10000; /* ensures overlay appears above Expo content, like z-index decides who sits on top. Larger number = more “on top”. */
 
-        /* Controls panel size */
-        width: clamp(340px, 42vw, 520px);                    /* main panel width */
-        max-width: calc(100vw - 24px);   /* prevents overflow on small screen */
+        /* On small screens: center it so it doesn’t cover content oddly */
+        @media (max-width: 600px) {
+          #home-wow {
+            left: 50%;
+            transform: translateX(-50%);
+          }
+        }
+
+        /* =========================
+           Size controls
+           ========================= */
+
+        /* width: clamp(min, preferred, max)
+           - min: smallest it can get (prevents too narrow)
+           - preferred: scales with viewport width (vw = % of viewport width)
+           - max: cap it so it doesn’t become comically wide */
+        width: clamp(340px, 42vw, 520px);
+
+        /* max-width keeps it from overflowing screen edges
+           100vw = viewport width
+           subtracting 24px gives breathing room */
+        max-width: calc(100vw - 24px);   
+
+        /* padding = internal spacing (top/bottom, left/right)
+           Larger padding = taller/wider feel inside */
         padding: 10px 12px;              /* inner spacing (smaller = shorter panel) */
 
-        border-radius: 18px;
-        background: rgba(16, 16, 18, 0.55);
-        backdrop-filter: blur(12px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+        /* =========================
+           Look & feel
+           ========================= */
+        border-radius: 18px;                        /* larger = rounder corners */
+        background: rgba(16, 16, 18, 0.55);         /* last value is opacity (0 to 1) */
+        backdrop-filter: blur(12px);                /* glassy blur behind it */
+        box-shadow: 0 20px 60px rgba(0,0,0,0.22);   /* shadow depth */
 
         color: var(--gray);
         font-family: var(--font);
         text-align: left;
         
-        /* Allows slider interaction even with overlay layers */
-        pointer-events: auto; 
+        /* pointer-events controls whether the overlay can be clicked/dragged.
+           auto = clickable (needed for slider)
+           none = clicks pass THROUGH to cards (but slider becomes unusable) */
+        pointer-events: auto; /* Allows slider interaction even with overlay layers */
 
-        /* Layout engine (this is the important part) */
+        /* =========================
+           Layout engine (Flexbox)
+           =========================
+           display:flex -> children arranged in a row by default */
         display: flex;                   /* creates horizontal layout */
+
+        /* align-items (vertical alignment inside the flex row)
+           center = align all child items nicely vertically */
         align-items: center;             /* keeps slider from vertically centering too low */
+
+        /* justify-content (horizontal spacing)
+           space-between = left content on left, slider on right */
         justify-content: space-between;  /* left text + right slider */
-        gap: 10px;
+        gap: 10px;                       /* spacing between children (text block and slider block) */
+
+        /* nowrap prevents the slider from dropping under the text */
         flex-wrap: nowrap;               /* prevents stacking */
       }
 
