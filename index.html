@@ -37,7 +37,7 @@
          - Scoped to #root (doesn't affect your overlay)
          - Targets h1 with dir="auto" (RN Web pattern)
          ========================================================= */
-      #root h1[dir="auto] {
+      #root h1[dir="auto"] {
         display: none !important;
       }
 
@@ -112,8 +112,8 @@
            (attached to the viewport, not the page). */
         position: fixed;    /* attaches to viewport instead of page flow */
         left: 50%;          /* px = fixed distance from left edge. Smaller = closer to the edge. Or, % = relative to viewport width */
-        top: 16px;          /* px = fixed distance from top edge. Larger = lower down. */
-        transform: translatex(-50%);    /* centering shift */
+        top: 12px;          /* px = fixed distance from top edge. Larger = lower down. */
+        transform: translateX(-50%);    /* centering shift */
         z-index: 10000; /* ensures overlay appears above Expo content, like z-index decides who sits on top. Larger number = more “on top”. */
 
         /* =========================
@@ -178,14 +178,29 @@
             width: min(92vw, 520px);     /* vw = "viewport width" units (percent of screen width) */
             max-width: 92vw; 
 
-            top: 10px;
+            top: calc(env(safe-area-inset-top) + 8px);
             padding: 10px 12px;
+
+            left:50%;
+            transform: translateX(-50%);
 
             /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
             flex-direction: column;      /* row -> column */
             align-items: stretch;        /* children expand full width */
             text-align: center;
             gap: 10px;
+          }
+
+          /* Let the slider take full width when stacked */
+          #home-wow section {
+            width: 100%;
+            flex: 1 1 auto;    /* allow grow + shrink */
+          }
+
+          /* keep labels + slider centered nicely */
+          #home-wow .slider-row {
+            max-width: 420px;  /* prevents it from stretching too wide */
+            margin: 0 auto;    /* centers the slider block inside the panel */
           }
         }
       
