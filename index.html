@@ -101,14 +101,14 @@
         position: fixed;    /* attaches to viewport instead of page flow */
         left: 50%;          /* px = fixed distance from left edge. Smaller = closer to the edge. Or, % = relative to viewport width */
         top: 16px;          /* px = fixed distance from top edge. Larger = lower down. */
-        transform: none;    /* no centering shift by default */
+        transform: translatex(-50%);    /* centering shift */
         z-index: 10000; /* ensures overlay appears above Expo content, like z-index decides who sits on top. Larger number = more “on top”. */
 
         /* On small screens: center it so it doesn’t cover content oddly */
         @media (max-width: 600px) {
           #home-wow {
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50% + 16px); 
           }
         }
 
