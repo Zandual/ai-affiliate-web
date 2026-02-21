@@ -172,67 +172,77 @@
       }
 
       /* On small screens: center it so it doesn’t cover content oddly */
-        @media (max-width: 520px) {
-          #home-wow {
-            /* Mobile goal: make everything visible + stack nicely */
-            width: 92vw;           /* vw = "viewport width" units (percent of screen width) */
-            max-width: 92vw;       /* prevents overshooting */
+      @media (max-width: 520px) {
+        #home-wow {
+          /* Mobile goal: make everything visible + stack nicely */
+          width: min(88vw, 360px);           /* vw = "viewport width" units (percent of screen width) */
+          max-width: 88vw;                   /* prevents overshooting */
 
-            /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
-            top: calc(env(safe-area-inset-top) + 10px);
+          /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
+          top: calc(env(safe-area-inset-top) + 8px);
 
-            /* Smaller padding = more room for slider */
-            padding: 10px 12px;
+          /* Smaller padding = more room for slider */
+          padding: 8px 10px;
+          gap: 8px;
+            
+          /* Center horizontally:
+             left:50% puts the LEFT edge at the middle.
+             translateX(-50%) pulls it back by half its own width. */
+          left:50%;
+          transform: translateX(-50%);
 
-            /* Center horizontally:
-               left:50% puts the LEFT edge at the middle.
-               translateX(-50%) pulls it back by half its own width. */
-            left:50%;
-            transform: translateX(-50%);
+          /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
+          flex-direction: column;      /* row -> column */
+          align-items: center;         /* children expand full width */
+          text-align: center;
 
-            /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
-            flex-direction: column;      /* row -> column */
-            align-items: stretch;        /* children expand full width */
-            text-align: center;
-            gap: 10px;
-          }
-
-          #home-wow h1 {
-            /* Allow wrapping if needed on narrow devices */
-            white-space: normal;
-
-            /* Smaller font for mobile so it doesn't dominate */
-            font-size: 34px;
-            line-height: 1.0;
-
-            /* If you see clipping, give extra breathing room */
-            margin-top: 2px;
-          }
-
-          #home-wow h2 {
-            font-size: 12px; /* compact subtitle */
-            letter-spacing: 0.10ch;
-          }
-          
-          /* Let the slider take full width when stacked */
-          #home-wow section {
-            width: 100%;
-            flex: 1 1 auto;    /* allow grow + shrink */
-          }
-
-          /* keep labels + slider centered nicely */
-          #home-wow .slider-row {
-            max-width: min(420px, 100%);  /* prevents it from stretching too wide */
-            margin: 0 auto;    /* centers the slider block inside the panel */
-          }
-
-          /* make the thumb a bit smaller on phones */
-          #home-wow input[type="range"]::-webkit-slider-thumb {
-            height: 1.75rem;
-            width: 1.1rem;
-            margin-top: -11px;
-          }
+          border-radius: 16px;         /* slightly tighter corners */
         }
+
+        #home-wow h1 {
+          /* Allow wrapping if needed on narrow devices */
+          white-space: nowrap;         /* HOME fits fine; keeps height down */
+
+          /* Smaller font for mobile so it doesn't dominate */
+          font-size: 26px;
+          line-height: 1;
+
+          /* If you see clipping, give extra breathing room */
+          margin-top: 2px;
+        }
+
+        #home-wow h2 {
+          font-size: 11px; /* compact subtitle */
+          letter-spacing: 0.09ch;
+        }
+        
+        /* Let the slider take full width when stacked */
+        #home-wow section {
+          width: 100%;
+          flex: 0 0 auto;    /* allow grow + shrink */
+        }
+
+        /* keep labels + slider centered nicely */
+        #home-wow .slider-row {
+          width: min(260px, 100%);  /* prevents it from stretching too wide */
+          margin: 0 auto;    /* centers the slider block inside the panel */
+        }
+
+        #home-wow .slider-labels {
+          font-size: 12px;
+        }
+
+        #home-wow input[type="range"]::webkit-slider-runnable-track {
+          height: 0.42rem;
+        }
+          
+        /* make the thumb a bit smaller on phones */
+        #home-wow input[type="range"]::-webkit-slider-thumb {
+          height: 1.5rem;
+          width: 1.0rem;
+          margin-top: -10px;
+        }
+      }
       
       #home-wow * { font-family: inherit; }
       
