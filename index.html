@@ -175,12 +175,18 @@
         @media (max-width: 520px) {
           #home-wow {
             /* Mobile goal: make everything visible + stack nicely */
-            width: min(92vw, 520px);     /* vw = "viewport width" units (percent of screen width) */
-            max-width: 92vw; 
+            width: 92vw;           /* vw = "viewport width" units (percent of screen width) */
+            max-width: 92vw;       /* prevents overshooting */
 
-            top: calc(env(safe-area-inset-top) + 8px);
+            /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
+            top: calc(env(safe-area-inset-top) + 10px);
+
+            /* Smaller padding = more room for slider */
             padding: 10px 12px;
 
+            /* Center horizontally:
+               left:50% puts the LEFT edge at the middle.
+               translateX(-50%) pulls it back by half its own width. */
             left:50%;
             transform: translateX(-50%);
 
@@ -191,6 +197,23 @@
             gap: 10px;
           }
 
+          #home-wow h1 {
+            /* Allow wrapping if needed on narrow devices */
+            white-space: normal;
+
+            /* Smaller font for mobile so it doesn't dominate */
+            font-size: 34px;
+            line-height: 1.0;
+
+            /* If you see clipping, give extra breathing room */
+            margin-top: 2px;
+          }
+
+          #home-wow h2 {
+            font-size: 12px; /* compact subtitle */
+            letter-spacing: 0.10ch;
+          }
+          
           /* Let the slider take full width when stacked */
           #home-wow section {
             width: 100%;
@@ -199,8 +222,15 @@
 
           /* keep labels + slider centered nicely */
           #home-wow .slider-row {
-            max-width: 420px;  /* prevents it from stretching too wide */
+            max-width: min(420px, 100%);  /* prevents it from stretching too wide */
             margin: 0 auto;    /* centers the slider block inside the panel */
+          }
+
+          /* make the thumb a bit smaller on phones */
+          #home-wow input[type="range"]::-webkit-slider-thumb {
+            height: 1.75rem;
+            width: 1.1rem;
+            margin-top: -11px;
           }
         }
       
