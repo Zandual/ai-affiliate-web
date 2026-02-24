@@ -124,7 +124,7 @@
            - min: smallest it can get (prevents too narrow)
            - preferred: scales with viewport width (vw = % of viewport width)
            - max: cap it so it doesn’t become comically wide */
-        width: clamp(340px, 42vw, 520px);
+        width: clamp(260px, 60vw, 360px);
 
         /* max-width keeps it from overflowing screen edges
            100vw = viewport width
@@ -133,7 +133,7 @@
 
         /* padding = internal spacing (top/bottom, left/right)
            Larger padding = taller/wider feel inside */
-        padding: 10px 12px;              /* inner spacing (smaller = shorter panel) */
+        padding: 6px 10px;              /* inner spacing (smaller = shorter panel) */
 
         /* =========================
            Look & feel
@@ -175,7 +175,7 @@
       @media (max-width: 520px) {
         #home-wow {
           /* Mobile goal: make everything visible + stack nicely */
-          width: min(88vw, 360px);           /* vw = "viewport width" units (percent of screen width) */
+          width: min(80vw, 300px);           /* vw = "viewport width" units (percent of screen width) */
           max-width: 88vw;                   /* prevents overshooting */
 
           /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
@@ -259,7 +259,7 @@
       #home-wow h1 {
         margin: 0;
         color: var(--green);
-        font-size: clamp(28px, 4vw, 44px); /* scales down on smaller screens */
+        font-size: clamp(22px, 6vw, 32px); /* scales down on smaller screens */
         font-weight: 900;
         letter-spacing: 0.02ch;
         line-height: 1;                    /* tighter vertical space */
