@@ -182,20 +182,21 @@
           top: calc(env(safe-area-inset-top) + 8px);
 
           /* Smaller padding = more room for slider */
-          padding: 8px 10px;
-          gap: 4px;
+          padding: 8px 10px;      /* Inner spacing (smaller = shorter box) */
+          gap: 6px;               /* Space BETWEEN stacked rows (smaller = shorter box) */
             
           /* Center horizontally:
              left:50% puts the LEFT edge at the middle.
              translateX(-50%) pulls it back by half its own width. */
-          left:50%;
-          transform: translateX(-50%);
+          left:50%;                        /* Put the LEFT edge at the middle of the screen */
+          transform: translateX(-50%);     /* Pull it left by half its own width = true centering */
 
           /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
-          flex-direction: column;      /* row -> column */
-          align-items: center;         /* children expand full width */
+          flex-direction: column;       /* row -> column */
+          align-items: center;          /* children expand full width */
+          justify-content: flex-start:  /* removes the giant empty middle space */
+          
           text-align: center;
-
           border-radius: 16px;         /* slightly tighter corners */
         }
 
@@ -212,8 +213,9 @@
         }
 
         #home-wow h2 {
-          font-size: 11px; /* compact subtitle */
+          font-size: 11px;            /* compact subtitle */
           letter-spacing: 0.09ch;
+          line-height: 1.05;          /* Smaller line height = less vertical space */
         }
         
         /* Let the slider take full width when stacked */
