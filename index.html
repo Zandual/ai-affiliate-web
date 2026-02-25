@@ -99,7 +99,14 @@
            =========================
            These are like named settings that your children elements can reuse.
            Changing these updates everything that references them. */
+        /* Typography */
         --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        /* Colors
+           oklch() is a modern color space that’s easier to tune (brightness/chroma/hue).
+           Options you can swap in later:
+           - hex: #22c55e
+           - rgb/rgba: rgba(34,197,94,0.9)
+           - hsl: hsl(142 70% 45%) */
         --really-green: oklch(88.14% 0.203 158.82);
         --green: oklch(78.59% 0.18 159.1);
         --gray: oklch(92% 0 0);
@@ -318,14 +325,14 @@
           max-width: 88vw;                   /* prevents overshooting */
 
           /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
-          top: calc(env(safe-area-inset-top) + 8px);
+          top: calc(env(safe-area-inset-top) + 20px);
 
           display: inline-flex;       /* shrink-wrap height more reliably */
-          padding-bottom: 8px;        /* keep it tight */
           overflow: hidden;           /* prevents any weird overflow from “counting” visually */
 
           /* Smaller padding = more room for slider */
           padding: 8px 10px;      /* Inner spacing (smaller = shorter box) */
+          padding-bottom: 8px;        /* keep it tight */
           gap: 6px;               /* Space BETWEEN stacked rows (smaller = shorter box) */
             
           /* Center horizontally:
