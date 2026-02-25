@@ -192,18 +192,19 @@
           transform: translateX(-50%);     /* Pull it left by half its own width = true centering */
 
           /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
-          flex-direction: column;       /* row -> column */
-          align-items: center;          /* children expand full width */
-          justify-content: flex-start;  /* removes the giant empty middle space */
+          flex-direction: column !important;       /* row -> column */
+          align-items: center !important;          /* children expand full width */
+          justify-content: flex-start !important;  /* removes the giant empty middle space */
+          row-gap: 6px !important;
 
-          height: auto;
-          min-height: 0;
+          height: fit-content !important;
+          min-height: 0 !important;
           
           text-align: center;
           border-radius: 16px;         /* slightly tighter corners */
 
-          outline: 4px solid red !important;
-          background: rgba(255, 0, 0, 0.25) !important;
+          /* outline: 4px solid red !important; */
+          /* background: rgba(255, 0, 0, 0.25) !important; */
         }
 
         #home-wow h1 {
@@ -216,21 +217,26 @@
 
           /* If you see clipping, give extra breathing room */
           margin-top: 2px;
-          margin: 0;
+          margin: 0 !important;
         }
 
         #home-wow h2 {
           font-size: 11px;            /* compact subtitle */
           letter-spacing: 0.09ch;
           line-height: 1.05;          /* Smaller line height = less vertical space */
-          margin: 0;
+          margin: 0 !important;
+        }
+
+        #home-wow article {
+          flex: 0 0 auto !important;
         }
         
         /* Let the slider take full width when stacked */
         #home-wow section {
           width: 100%;
           flex: 0 0 auto;    /* allow grow + shrink */
-          margin: 0;
+          margin: 0 !important;
+          padding: 0 !important;
         }
 
         /* keep labels + slider centered nicely */
