@@ -170,96 +170,6 @@
         /* nowrap prevents the slider from dropping under the text */
         flex-wrap: nowrap;               /* prevents stacking */
       }
-
-      /* On small screens: center it so it doesn’t cover content oddly */
-      @media (max-width: 520px) {
-        #home-wow {
-          /* Mobile goal: make everything visible + stack nicely */
-          width: min(80vw, 300px);           /* vw = "viewport width" units (percent of screen width) */
-          max-width: 88vw;                   /* prevents overshooting */
-
-          /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
-          top: calc(env(safe-area-inset-top) + 8px);
-
-          /* Smaller padding = more room for slider */
-          padding: 8px 10px;      /* Inner spacing (smaller = shorter box) */
-          gap: 6px;               /* Space BETWEEN stacked rows (smaller = shorter box) */
-            
-          /* Center horizontally:
-             left:50% puts the LEFT edge at the middle.
-             translateX(-50%) pulls it back by half its own width. */
-          left:50%;                        /* Put the LEFT edge at the middle of the screen */
-          transform: translateX(-50%);     /* Pull it left by half its own width = true centering */
-
-          /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
-          flex-direction: column !important;       /* row -> column */
-          align-items: center !important;          /* children expand full width */
-          justify-content: flex-start !important;  /* removes the giant empty middle space */
-          row-gap: 6px !important;
-
-          height: fit-content !important;
-          min-height: 0 !important;
-          
-          text-align: center;
-          border-radius: 16px;         /* slightly tighter corners */
-
-          /* outline: 4px solid red !important; */
-          /* background: rgba(255, 0, 0, 0.25) !important; */
-        }
-
-        #home-wow h1 {
-          /* Allow wrapping if needed on narrow devices */
-          white-space: nowrap;         /* HOME fits fine; keeps height down */
-
-          /* Smaller font for mobile so it doesn't dominate */
-          font-size: 26px;
-          line-height: 1;
-
-          /* If you see clipping, give extra breathing room */
-          margin-top: 2px;
-          margin: 0 !important;
-        }
-
-        #home-wow h2 {
-          font-size: 11px;            /* compact subtitle */
-          letter-spacing: 0.09ch;
-          line-height: 1.05;          /* Smaller line height = less vertical space */
-          margin: 0 !important;
-        }
-
-        #home-wow article {
-          flex: 0 0 auto !important;
-        }
-        
-        /* Let the slider take full width when stacked */
-        #home-wow section {
-          width: 100%;
-          flex: 0 0 auto;    /* allow grow + shrink */
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-
-        /* keep labels + slider centered nicely */
-        #home-wow .slider-row {
-          width: min(260px, 100%);  /* prevents it from stretching too wide */
-          margin: 0 auto;           /* centers the slider block inside the panel */
-        }
-
-        #home-wow .slider-labels {
-          font-size: 12px;
-        }
-
-        #home-wow input[type="range"]::-webkit-slider-runnable-track {
-          height: 0.42rem;
-        }
-          
-        /* make the thumb a bit smaller on phones */
-        #home-wow input[type="range"]::-webkit-slider-thumb {
-          height: 1.5rem;
-          width: 1.0rem;
-          margin-top: -10px;
-        }
-      }
       
       #home-wow * { font-family: inherit; }
       
@@ -398,6 +308,101 @@
 
       [data-testid="deal-cta"]:active {
         transform: translateY(0px) scale(0.99);
+      }
+
+      /* On small screens: center it so it doesn’t cover content oddly */
+      @media (max-width: 520px) {
+        #home-wow {
+          /* Mobile goal: make everything visible + stack nicely */
+          width: min(80vw, 300px);           /* vw = "viewport width" units (percent of screen width) */
+          max-width: 88vw;                   /* prevents overshooting */
+
+          /* safe-area-inset-top prevents it from hiding behind the iPhone notch */
+          top: calc(env(safe-area-inset-top) + 8px);
+
+          display: inline-flex;       /* shrink-wrap height more reliably */
+          padding-bottom: 8px;        /* keep it tight */
+          overflow: hidden;           /* prevents any weird overflow from “counting” visually */
+
+          /* Smaller padding = more room for slider */
+          padding: 8px 10px;      /* Inner spacing (smaller = shorter box) */
+          gap: 6px;               /* Space BETWEEN stacked rows (smaller = shorter box) */
+            
+          /* Center horizontally:
+             left:50% puts the LEFT edge at the middle.
+             translateX(-50%) pulls it back by half its own width. */
+          left:50%;                        /* Put the LEFT edge at the middle of the screen */
+          transform: translateX(-50%);     /* Pull it left by half its own width = true centering */
+
+          /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
+          flex-direction: column !important;       /* row -> column */
+          align-items: center !important;          /* children expand full width */
+          justify-content: flex-start !important;  /* removes the giant empty middle space */
+          row-gap: 6px !important;
+
+          height: fit-content !important;
+          min-height: 0 !important;
+          
+          text-align: center;
+          border-radius: 16px;         /* slightly tighter corners */
+
+          /* outline: 4px solid red !important; */
+          /* background: rgba(255, 0, 0, 0.25) !important; */
+        }
+
+        #home-wow h1 {
+          /* Allow wrapping if needed on narrow devices */
+          white-space: nowrap;         /* HOME fits fine; keeps height down */
+
+          /* Smaller font for mobile so it doesn't dominate */
+          font-size: 26px;
+          line-height: 1;
+
+          /* If you see clipping, give extra breathing room */
+          margin-top: 2px;
+          margin: 0 !important;
+        }
+
+        #home-wow h2 {
+          font-size: 11px;            /* compact subtitle */
+          letter-spacing: 0.09ch;
+          line-height: 1.05;          /* Smaller line height = less vertical space */
+          margin: 0 !important;
+        }
+
+        #home-wow article {
+          flex: 0 0 auto !important;
+        }
+        
+        /* Let the slider take full width when stacked */
+        #home-wow section {
+          width: 100%;
+          flex: 0 0 auto;    /* allow grow + shrink */
+          margin: 0 !important;
+          padding: 0 !important;
+          align-self: stretch;
+        }
+
+        /* keep labels + slider centered nicely */
+        #home-wow .slider-row {
+          width: min(260px, 100%);  /* prevents it from stretching too wide */
+          margin: 0 auto;           /* centers the slider block inside the panel */
+        }
+
+        #home-wow .slider-labels {
+          font-size: 12px;
+        }
+
+        #home-wow input[type="range"]::-webkit-slider-runnable-track {
+          height: 0.42rem;
+        }
+          
+        /* make the thumb a bit smaller on phones */
+        #home-wow input[type="range"]::-webkit-slider-thumb {
+          height: 1.5rem;
+          width: 1.0rem;
+          margin-top: -10px;
+        }
       }
     </style>
   </head>
