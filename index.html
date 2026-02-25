@@ -194,7 +194,10 @@
           /* Stack the title area and slider vertically so the slider can’t get squeezed off-screen */
           flex-direction: column;       /* row -> column */
           align-items: center;          /* children expand full width */
-          justify-content: flex-start:  /* removes the giant empty middle space */
+          justify-content: flex-start  /* removes the giant empty middle space */
+
+          height: auto;
+          min-height: 0;
           
           text-align: center;
           border-radius: 16px;         /* slightly tighter corners */
@@ -210,24 +213,27 @@
 
           /* If you see clipping, give extra breathing room */
           margin-top: 2px;
+          margin: 0;
         }
 
         #home-wow h2 {
           font-size: 11px;            /* compact subtitle */
           letter-spacing: 0.09ch;
           line-height: 1.05;          /* Smaller line height = less vertical space */
+          margin: 0;
         }
         
         /* Let the slider take full width when stacked */
         #home-wow section {
           width: 100%;
           flex: 0 0 auto;    /* allow grow + shrink */
+          marign: 0;
         }
 
         /* keep labels + slider centered nicely */
         #home-wow .slider-row {
           width: min(260px, 100%);  /* prevents it from stretching too wide */
-          margin: 0 auto;    /* centers the slider block inside the panel */
+          margin: 0 auto;           /* centers the slider block inside the panel */
         }
 
         #home-wow .slider-labels {
