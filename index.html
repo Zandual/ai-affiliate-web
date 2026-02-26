@@ -25,7 +25,36 @@
         z-index: 1;
         background: transparent !important;
       }
+            
+      /* =========================================================
+         Page transitions (Web-safe premium feel)
+         ---------------------------------------------------------
+         Strategy:
+         Toggle a class on <html> before navigation.
+         Animate #root out, then back in.
+      ========================================================= */
+      #root {
+        transition: opacity 180ms ease, transform 220ms ease, filter 220ms ease;
+        will-change: opacity, transform, filter;
+      }
 
+      /* When navigating */
+      html.is-navigating #root {
+        opacity: 0;
+        transform: translateY(6px) scale(0.995);
+        filter: blur(1px);
+      }
+
+      /* Accessibility: respect reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        #root { transition: none; }
+        html.is-navigating #root {
+          opacity: 1;
+          transform: none;
+          filter: none;
+        }
+      }
+      
       #root > div { background: transparent !important; }
       #root [style*="background-color"] { background-color: transparent !important; }
 
