@@ -61,9 +61,11 @@
       /* Accessibility: respect reduced motion */
       @media (prefers-reduced-motion: reduce) {
         #root { transition: none; }
-        html.is-navigating #root {
+        
+        html.is-navigating #root,
+        html.is-entering #root {
           opacity: 1;
-          transform: none;
+          transform: scale(1.02);
           filter: none;
         }
       }
