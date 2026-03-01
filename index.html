@@ -447,9 +447,14 @@
           Gradient luxury:
             background: radial-gradient(circle at center, #ffffff, #eaeaea);
         */
-        background: rgba(255,255,255,0.95);
-
+        background: rgba(255,255,255,0.08);
+          
+        /* adds a premium “frosted” feel without hiding content */
+        backdrop-filter: blur(6px) saturate(1.15);
+          
         opacity: 0;  /* hidden by default */
+
+        outline: 2px solid rgba(255,255,255,0.20);
 
         /*
           Default wipe origin.
