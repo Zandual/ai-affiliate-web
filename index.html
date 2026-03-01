@@ -414,6 +414,103 @@
         #root {
           padding-top: 160px;
         }
+
+        /* =========================================================
+           PAGE WIPE TRANSITION (Square zoom from click origin)
+           ========================================================= */
+
+        /*
+          #page-wipe is a full-screen overlay that grows from a point.
+          It sits ABOVE everything (z-index: 9999).
+          JS sets the starting point using CSS variables --wipe-x / --wipe-y.
+        */
+
+        #page-wipe{
+          position: fixed;       /* stays locked to viewport */
+          inset: 0;              /* shorthand for top/right/bottom/left: 0 */
+          pointer-events: none;  /* never blocks clicks */
+          z-index: 9999;         /* must be above RN Web content */
+
+        /*
+          BACKGROUND OPTIONS:
+          ------------------------------------
+          Solid white (clean app feel):
+          background: white;
+
+          Soft glass feel:
+            background: rgba(255,255,255,0.92);
+
+          Dark cinematic:
+            background: rgba(0,0,0,0.9);
+
+          Gradient luxury:
+            background: radial-gradient(circle at center, #ffffff, #eaeaea);
+        */
+        background: rgba(255,255,255,0.95);
+
+        opacity: 0;  /* hidden by default */
+
+        /*
+          Default wipe origin.
+          JS will override these dynamically.
+        */
+        --wipe-x: 50vw;
+        --wipe-y: 50vh;
+
+        /*
+          clip-path explanation:
+          inset(top right bottom left)
+
+          This creates a rectangle clipped inward.
+          We start clipped to a single point at (--wipe-x, --wipe-y).
+        */
+        clip-path: inset(
+          var(--wipe-y)
+          calc(100vw - var(--wipe-x))
+          calc(100vh - var(--wipe-y))
+          var(--wipe-x)
+        );
+
+        /*
+          TRANSITION SPEED CONTROLS
+          ------------------------------------
+          520ms = dramatic
+          380ms = premium subtle
+          650ms = cinematic
+        */
+        transition:
+          clip-path 520ms cubic-bezier(.2,.9,.2,1),
+          opacity 80ms linear;
+        }
+
+        /* =========================================================
+           Active wipe state
+           ========================================================= */
+
+        /*
+          When <html> has class "wipe-out",
+          the square expands to full screen.
+        */
+        html.wipe-out #page-wipe{
+          opacity: 1;
+
+          /*
+            Full screen = inset(0 0 0 0)
+            Means no clipping.
+          */
+          clip-path: inset(0 0 0 0);
+        }
+
+        /* =========================================================
+           Accessibility: Respect Reduced Motion
+           ========================================================= */
+
+        @media (prefers-reduced-motion: reduce){
+          #page-wipe{
+            transition: none;
+            opacity: 0 !important;
+          }
+         }
       }
     </style>
   </head>
@@ -444,6 +541,8 @@
 
     <!-- Expo/React Native Web mounts here -->
     <div id="root"></div>
+    
+    <div id="page-wipe" aria-hidden="true">,</div>  
 
     <!-- Load Expo bundle -->
     <script src="/AppEntry.js" defer></script>
