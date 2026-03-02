@@ -416,107 +416,52 @@
         }
       }
       
-        /* =========================================================
-           PAGE WIPE TRANSITION (Square zoom from click origin)
-           ========================================================= */
+      /* =========================================================
+         Square reveal transition (reveals the NEW page)
+         Works by clipping #root to a tiny square at the click origin,
+         then expanding clip-path to full screen.
+         ========================================================= */
 
-        /*
-          #page-wipe is a full-screen overlay that grows from a point.
-          It sits ABOVE everything (z-index: 9999).
-          JS sets the starting point using CSS variables --wipe-x / --wipe-y.
-        */
-
-        #page-wipe{
-          position: fixed;       /* stays locked to viewport */
-          inset: 0;              /* shorthand for top/right/bottom/left: 0 */
-          pointer-events: none;  /* never blocks clicks */
-          z-index: 9999;         /* must be above RN Web content */
-
-        /*
-          BACKGROUND OPTIONS:
-          ------------------------------------
-          Solid white (clean app feel):
-          background: white;
-
-          Soft glass feel:
-            background: rgba(255,255,255,0.92);
-
-          Dark cinematic:
-            background: rgba(0,0,0,0.9);
-
-          Gradient luxury:
-            background: radial-gradient(circle at center, #ffffff, #eaeaea);
-        */
-        background: rgba(255,255,255,0.08);
-          
-        /* adds a premium “frosted” feel without hiding content */
-        backdrop-filter: blur(6px) saturate(1.15);
-          
-        opacity: 0;  /* hidden by default */
-
-        outline: 2px solid rgba(255,255,255,0.20);
-
-        /*
-          Default wipe origin.
-          JS will override these dynamically.
-        */
+      /* "Knobs" you can change later */
+      :root{
+        --reveal-ms: 520ms;                 /* 380ms = snappier, 650ms = cinematic */
+        --reveal-ease: cubic-bezier(.2,.9,.2,1);
+        --reveal-size: 2px;                 /* starting square half-size (2px–12px) */
+      
+        /* These get set by JS (pixels) */
         --wipe-x: 50vw;
         --wipe-y: 50vh;
-
-        /*
-          clip-path explanation:
-          inset(top right bottom left)
-
-          This creates a rectangle clipped inward.
-          We start clipped to a single point at (--wipe-x, --wipe-y).
-        */
+      }
+      
+      /* Always set transitions on root so it can animate smoothly */
+      #root{
+        will-change: clip-path, transform;
+      }
+      
+      /* Start state: clip #root to a tiny square at (x,y) */
+      html.reveal-start #root{
         clip-path: inset(
-          var(--wipe-y)
-          calc(100vw - var(--wipe-x))
-          calc(100vh - var(--wipe-y))
-          var(--wipe-x)
+          calc(var(--wipe-y) - var(--reveal-size))
+          calc(100vw - var(--wipe-x) - var(--reveal-size))
+          calc(100vh - var(--wipe-y) - var(--reveal-size))
+          calc(var(--wipe-x) - var(--reveal-size))
         );
-
-        /*
-          TRANSITION SPEED CONTROLS
-          ------------------------------------
-          520ms = dramatic
-          380ms = premium subtle
-          650ms = cinematic
-        */
-        transition:
-          clip-path 520ms cubic-bezier(.2,.9,.2,1),
-          opacity 80ms linear;
+      }
+      
+      /* Animate to full screen: the square expands until it reveals everything */
+      html.reveal-anim #root{
+        transition: clip-path var(--reveal-ms) var(--reveal-ease);
+        clip-path: inset(0 0 0 0);
+      }
+      
+      /* Accessibility */
+      @media (prefers-reduced-motion: reduce){
+        html.reveal-start #root,
+        html.reveal-anim #root{
+          transition: none !important;
+          clip-path: inset(0 0 0 0) !important;
         }
-
-        /* =========================================================
-           Active wipe state
-           ========================================================= */
-
-        /*
-          When <html> has class "wipe-out",
-          the square expands to full screen.
-        */
-        html.wipe-out #page-wipe{
-          opacity: 1;
-
-          /*
-            Full screen = inset(0 0 0 0)
-            Means no clipping.
-          */
-          clip-path: inset(0 0 0 0);
-        }
-
-        /* =========================================================
-           Accessibility: Respect Reduced Motion
-           ========================================================= */
-
-        @media (prefers-reduced-motion: reduce){
-          #page-wipe{
-            transition: none;
-            opacity: 0 !important;
-          }
-         }
+      }
     </style>
   </head>
 
