@@ -134,35 +134,52 @@ function navWithSquareReveal(go, evt){
   try{
     var html = document.documentElement;
 
-    // Determine the origin point (center of clicked element)
-    var x = window.innerWidth/2, y = window.innerHeight/2;
+    // Default = center (only used if we truly have no event info)
+    var x = window.innerWidth / 2;
+    var y = window.innerHeight / 2;
 
-    var t = evt && (evt.currentTarget || evt.target);
-    if(t && t.getBoundingClientRect){
-      var r = t.getBoundingClientRect();
-      x = r.left + r.width/2;
-      y = r.top + r.height/2;
+    // 1) BEST SOURCE: pointer coordinates from RN Web nativeEvent
+    // RN Web usually provides pageX/pageY or clientX/clientY here.
+    var ne = evt && evt.nativeEvent;
+    if(ne){
+      if(ne.pageX != null && ne.pageY != null){
+        x = ne.pageX;
+        y = ne.pageY;
+      } else if(ne.clientX != null && ne.clientY != null){
+        x = ne.clientX;
+        y = ne.clientY;
+      }
     }
 
-    // Store origin for CSS
+    // 2) NICE-TO-HAVE: element center (only if it's a real DOM node)
+    // This makes the origin "card center" instead of exact click point.
+    var el = (evt && (evt.currentTarget || evt.target)) ||
+             (ne && ne.target) ||
+             null;
+
+    if(el && el.getBoundingClientRect){
+      var r = el.getBoundingClientRect();
+      x = r.left + r.width / 2;
+      y = r.top + r.height / 2;
+    }
+
+    // Store origin for CSS (px values expected)
     html.style.setProperty("--wipe-x", x + "px");
     html.style.setProperty("--wipe-y", y + "px");
 
-    // 1) Immediately set the "tiny square" clip
+    // Start clipped (tiny square), then navigate, then expand
     html.classList.remove("reveal-anim");
     html.classList.add("reveal-start");
 
-    // 2) Navigate immediately so the NEW page is mounted under the mask
     go();
 
-    // 3) Next frame: animate the clip-path open to full-screen
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
         html.classList.add("reveal-anim");
       });
     });
 
-    // 4) Cleanup after animation completes
+    // Cleanup after animation finishes
     setTimeout(function(){
       html.classList.remove("reveal-start");
       html.classList.remove("reveal-anim");
@@ -172,7 +189,7 @@ function navWithSquareReveal(go, evt){
     go();
   }
 }
-__d(function(g,r,i,a,m,e,d){var n=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(){return(0,h.jsx)(c.NavigationContainer,{children:(0,h.jsxs)(v.Navigator,{screenOptions:{animation:"slide_from_right"},children:[(0,h.jsx)(v.Screen,{name:"Home",component:l.default,options:({navigation:n})=>({headerRight:()=>(0,h.jsx)(o.default,{onPress:(evt)=>navWithSquareReveal(function(){n.navigate('Dashboard')}, evt),children:(0,h.jsx)(t.default,{children:"Dashboard"})})})}),(0,h.jsx)(v.Screen,{name:"ProductDetail",component:u.default,options:{title:'Product'}}),(0,h.jsx)(v.Screen,{name:"Dashboard",component:f.default})]})})},r(d[1]);n(r(d[2]));var t=n(r(d[3])),o=n(r(d[4])),c=r(d[5]),s=r(d[6]),l=n(r(d[7])),u=n(r(d[8])),f=n(r(d[9])),h=r(d[10]);const v=(0,s.createNativeStackNavigator)()},84,[1,85,14,446,565,572,668,699,704,708,702]);
+__d(function(g,r,i,a,m,e,d){var n=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(){return(0,h.jsx)(c.NavigationContainer,{children:(0,h.jsxs)(v.Navigator,{screenOptions:{animation:"none"},children:[(0,h.jsx)(v.Screen,{name:"Home",component:l.default,options:({navigation:n})=>({headerRight:()=>(0,h.jsx)(o.default,{onPress:(evt)=>navWithSquareReveal(function(){n.navigate('Dashboard')}, evt),children:(0,h.jsx)(t.default,{children:"Dashboard"})})})}),(0,h.jsx)(v.Screen,{name:"ProductDetail",component:u.default,options:{title:'Product'}}),(0,h.jsx)(v.Screen,{name:"Dashboard",component:f.default})]})})},r(d[1]);n(r(d[2]));var t=n(r(d[3])),o=n(r(d[4])),c=r(d[5]),s=r(d[6]),l=n(r(d[7])),u=n(r(d[8])),f=n(r(d[9])),h=r(d[10]);const v=(0,s.createNativeStackNavigator)()},84,[1,85,14,446,565,572,668,699,704,708,702]);
 __d(function(g,r,i,a,m,e,d){var t=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),Object.defineProperty(e,"BaseButton",{enumerable:!0,get:function(){return w.BaseButton}}),Object.defineProperty(e,"BorderlessButton",{enumerable:!0,get:function(){return w.BorderlessButton}}),Object.defineProperty(e,"Directions",{enumerable:!0,get:function(){return u.Directions}}),Object.defineProperty(e,"DrawerLayout",{enumerable:!0,get:function(){return D.default}}),Object.defineProperty(e,"DrawerLayoutAndroid",{enumerable:!0,get:function(){return F.DrawerLayoutAndroid}}),Object.defineProperty(e,"FlatList",{enumerable:!0,get:function(){return F.FlatList}}),Object.defineProperty(e,"FlingGestureHandler",{enumerable:!0,get:function(){return H.FlingGestureHandler}}),Object.defineProperty(e,"ForceTouchGestureHandler",{enumerable:!0,get:function(){return P.ForceTouchGestureHandler}}),Object.defineProperty(e,"Gesture",{enumerable:!0,get:function(){return B.GestureObjects}}),Object.defineProperty(e,"GestureDetector",{enumerable:!0,get:function(){return G.GestureDetector}}),Object.defineProperty(e,"GestureHandlerRootView",{enumerable:!0,get:function(){return l.default}}),Object.defineProperty(e,"HoverEffect",{enumerable:!0,get:function(){return R.HoverEffect}}),Object.defineProperty(e,"LongPressGestureHandler",{enumerable:!0,get:function(){return y.LongPressGestureHandler}}),Object.defineProperty(e,"MouseButton",{enumerable:!0,get:function(){return f.MouseButton}}),Object.defineProperty(e,"NativeViewGestureHandler",{enumerable:!0,get:function(){return T.NativeViewGestureHandler}}),Object.defineProperty(e,"PanGestureHandler",{enumerable:!0,get:function(){return s.PanGestureHandler}}),Object.defineProperty(e,"PinchGestureHandler",{enumerable:!0,get:function(){return O.PinchGestureHandler}}),Object.defineProperty(e,"PointerType",{enumerable:!0,get:function(){return c.PointerType}}),Object.defineProperty(e,"PureNativeButton",{enumerable:!0,get:function(){return w.PureNativeButton}}),Object.defineProperty(e,"RawButton",{enumerable:!0,get:function(){return w.RawButton}}),Object.defineProperty(e,"RectButton",{enumerable:!0,get:function(){return w.RectButton}}),Object.defineProperty(e,"RefreshControl",{enumerable:!0,get:function(){return F.RefreshControl}}),Object.defineProperty(e,"RotationGestureHandler",{enumerable:!0,get:function(){return j.RotationGestureHandler}}),Object.defineProperty(e,"ScrollView",{enumerable:!0,get:function(){return F.ScrollView}}),Object.defineProperty(e,"State",{enumerable:!0,get:function(){return o.State}}),Object.defineProperty(e,"Swipeable",{enumerable:!0,get:function(){return L.default}}),Object.defineProperty(e,"Switch",{enumerable:!0,get:function(){return F.Switch}}),Object.defineProperty(e,"TapGestureHandler",{enumerable:!0,get:function(){return p.TapGestureHandler}}),Object.defineProperty(e,"TextInput",{enumerable:!0,get:function(){return F.TextInput}}),Object.defineProperty(e,"TouchableHighlight",{enumerable:!0,get:function(){return v.TouchableHighlight}}),Object.defineProperty(e,"TouchableNativeFeedback",{enumerable:!0,get:function(){return v.TouchableNativeFeedback}}),Object.defineProperty(e,"TouchableOpacity",{enumerable:!0,get:function(){return v.TouchableOpacity}}),Object.defineProperty(e,"TouchableWithoutFeedback",{enumerable:!0,get:function(){return v.TouchableWithoutFeedback}}),Object.defineProperty(e,"createNativeWrapper",{enumerable:!0,get:function(){return h.default}}),Object.defineProperty(e,"enableExperimentalWebImplementation",{enumerable:!0,get:function(){return N.enableExperimentalWebImplementation}}),Object.defineProperty(e,"enableLegacyWebImplementation",{enumerable:!0,get:function(){return N.enableLegacyWebImplementation}}),Object.defineProperty(e,"gestureHandlerRootHOC",{enumerable:!0,get:function(){return b.default}});var n=r(d[1]),u=r(d[2]),o=r(d[3]),c=r(d[4]),b=t(r(d[5])),l=t(r(d[6])),f=r(d[7]),p=r(d[8]),P=r(d[9]),y=r(d[10]),s=r(d[11]),O=r(d[12]),j=r(d[13]),H=r(d[14]),h=t(r(d[15])),G=r(d[16]),B=r(d[17]),T=r(d[18]),w=r(d[19]),v=r(d[20]),F=r(d[21]),R=r(d[22]),L=t(r(d[23])),D=t(r(d[24])),N=r(d[25]);(0,n.initialize)()},85,[1,86,121,91,105,150,154,111,186,280,282,283,284,285,286,287,289,487,288,498,549,557,483,560,562,98]);
 __d(function(g,r,i,a,m,e,d){var t=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.initialize=function(){(0,n.startListening)()},e.maybeInitializeFabric=function(){(0,c.isFabric)()&&!u&&(l.default.install(),u=!0)};var n=r(d[1]),l=t(r(d[2])),c=r(d[3]);let u=!1},86,[1,87,97,94]);
 __d(function(g,r,i,a,m,e,d){var l=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.onGestureHandlerEvent=f,e.startListening=function(){C(),h=n.default.addListener('onGestureHandlerEvent',f),v=n.default.addListener('onGestureHandlerStateChange',f)},e.stopListening=C;var n=l(r(d[1])),t=r(d[2]),o=r(d[3]),s=r(d[4]),u=r(d[5]);let h=null,v=null;const c=new Map,T=[];function E(l){return null!=l.oldState}function S(l){return null!=l.eventType}function f(l){var n,h,v,f,C,p,D,N;const G=(0,s.findHandler)(l.handlerTag);if(G){var H,L;if(E(l))if(l.oldState===t.State.UNDETERMINED&&l.state===t.State.BEGAN)null===(H=(L=G.handlers).onBegin)||void 0===H||H.call(L,l);else if(l.oldState!==t.State.BEGAN&&l.oldState!==t.State.UNDETERMINED||l.state!==t.State.ACTIVE){if(l.oldState!==l.state&&l.state===t.State.END){var U,A,O,_;if(l.oldState===t.State.ACTIVE)null===(O=(_=G.handlers).onEnd)||void 0===O||O.call(_,l,!0);null===(U=(A=G.handlers).onFinalize)||void 0===U||U.call(A,l,!0),T[G.handlers.handlerTag]=void 0}else if((l.state===t.State.FAILED||l.state===t.State.CANCELLED)&&l.oldState!==l.state){var y,M,I,b;if(l.oldState===t.State.ACTIVE)null===(I=(b=G.handlers).onEnd)||void 0===I||I.call(b,l,!1);null===(y=(M=G.handlers).onFinalize)||void 0===y||y.call(M,l,!1),c.delete(l.handlerTag),T[G.handlers.handlerTag]=void 0}}else{var V,k;null===(V=(k=G.handlers).onStart)||void 0===V||V.call(k,l),T[G.handlers.handlerTag]=l}else if(S(l)){c.has(l.handlerTag)||c.set(l.handlerTag,u.GestureStateManager.create(l.handlerTag));const t=c.get(l.handlerTag);switch(l.eventType){case o.TouchEventType.TOUCHES_DOWN:null===(n=G.handlers)||void 0===n||null===(h=n.onTouchesDown)||void 0===h||h.call(n,l,t);break;case o.TouchEventType.TOUCHES_MOVE:null===(v=G.handlers)||void 0===v||null===(f=v.onTouchesMove)||void 0===f||f.call(v,l,t);break;case o.TouchEventType.TOUCHES_UP:null===(C=G.handlers)||void 0===C||null===(p=C.onTouchesUp)||void 0===p||p.call(C,l,t);break;case o.TouchEventType.TOUCHES_CANCELLED:null===(D=G.handlers)||void 0===D||null===(N=D.onTouchesCancelled)||void 0===N||N.call(D,l,t)}}else{var w,B,F,z,P,R;if(null===(w=(B=G.handlers).onUpdate)||void 0===w||w.call(B,l),G.handlers.onChange&&G.handlers.changeEventCalculator)null===(F=(z=G.handlers).onChange)||void 0===F||F.call(z,null===(P=(R=G.handlers).changeEventCalculator)||void 0===P?void 0:P.call(R,l,T[G.handlers.handlerTag])),T[G.handlers.handlerTag]=l}}else{const n=(0,s.findOldGestureHandler)(l.handlerTag);if(n){const t={nativeEvent:l};return void(E(l)?n.onGestureStateChange(t):n.onGestureEvent(t))}}}function C(){h&&(h.remove(),h=null),v&&(v.remove(),v=null)}},87,[1,88,91,92,93,95]);
