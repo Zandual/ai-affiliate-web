@@ -153,9 +153,9 @@ function navWithSquareReveal(go, evt){
     }
 
     // Element under the pointer
-    var domEl = (document.elementFromPoint ? document.elementFromPoint(x, y) : null);
+    // Use the actual event target instead of elementFromPoint
+    var domEl = ne && ne.target ? ne.target : null;
 
-    // Walk upward until we hit the product card wrapper we tagged
     function closestProductCard(el){
       while(el && el !== document.body && el !== document.documentElement){
         var tid = el.getAttribute && el.getAttribute("data-testid");
