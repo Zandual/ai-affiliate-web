@@ -134,60 +134,52 @@ function navWithSquareReveal(go, evt){
   try{
     var html = document.documentElement;
 
-    // Default fallback (only if everything fails)
+    // Fallback origin (only if everything fails)
     var x = window.innerWidth / 2;
     var y = window.innerHeight / 2;
 
-    // Pull nativeEvent (React Native Web wraps real DOM events)
+    // RN Web wraps DOM events, so pull nativeEvent if it exists
     var ne = evt && evt.nativeEvent ? evt.nativeEvent : evt;
 
-    // 1) Prefer viewport coordinates (clientX/clientY)
+    // 1) Prefer viewport coords
     if(ne && ne.clientX != null && ne.clientY != null){
       x = ne.clientX;
       y = ne.clientY;
     }
-    // 2) Fallback: pageX/pageY -> convert to viewport coords
+    // 2) Fallback: page coords -> viewport
     else if(ne && ne.pageX != null && ne.pageY != null){
       x = ne.pageX - window.scrollX;
       y = ne.pageY - window.scrollY;
     }
 
-    // 3) Find the REAL DOM element under the pointer
-    var domEl = null;
-    if(document.elementFromPoint){
-      domEl = document.elementFromPoint(x, y);
-    }
+    // Element under the pointer
+    var domEl = (document.elementFromPoint ? document.elementFromPoint(x, y) : null);
 
-    // 4) Walk up to a likely "card" wrapper:
-    // RN Web often renders Pressable/Touchable as role="button"
-    function findClickable(el){
+    // Walk upward until we hit the product card wrapper we tagged
+    function closestProductCard(el){
       while(el && el !== document.body && el !== document.documentElement){
-        if(
-          (el.getAttribute && el.getAttribute("role") === "button") ||
-          (el.tagName && (el.tagName.toLowerCase() === "a" || el.tagName.toLowerCase() === "button")) ||
-          (el.onclick != null)
-        ){
-          return el;
-        }
+        var tid = el.getAttribute && el.getAttribute("data-testid");
+        if(tid && tid.indexOf("product-card-") === 0) return el;
         el = el.parentElement;
       }
       return null;
     }
 
-    var clickable = findClickable(domEl) || domEl;
+    var cardEl = closestProductCard(domEl);
 
-    // 5) Use the clickable element's CENTER as the wipe origin
-    if(clickable && clickable.getBoundingClientRect){
-      var r = clickable.getBoundingClientRect();
-      x = r.left + r.width / 2;
-      y = r.top + r.height / 2;
+    // If we found the card, prefer the TITLE center as the origin
+    if(cardEl && cardEl.getBoundingClientRect){
+      var titleEl = cardEl.querySelector && cardEl.querySelector('[data-testid^="product-title-"]');
+      var r = (titleEl && titleEl.getBoundingClientRect) ? titleEl.getBoundingClientRect() : cardEl.getBoundingClientRect();
+      x = r.left + (r.width / 2);
+      y = r.top + (r.height / 2);
     }
 
     // Store origin for CSS (px values expected)
     html.style.setProperty("--wipe-x", x + "px");
     html.style.setProperty("--wipe-y", y + "px");
 
-    // Start clipped (tiny square), then navigate, then expand
+    // Start clipped, navigate, then expand
     html.classList.remove("reveal-anim");
     html.classList.add("reveal-start");
 
@@ -199,11 +191,12 @@ function navWithSquareReveal(go, evt){
       });
     });
 
-    // Cleanup after animation finishes
+    // Cleanup after the CSS duration finishes (+ small buffer)
+    var ms = parseInt(getComputedStyle(html).getPropertyValue("--reveal-ms")) || 650;
     setTimeout(function(){
       html.classList.remove("reveal-start");
       html.classList.remove("reveal-anim");
-    }, 1300);
+    }, ms + 60);
 
   }catch(e){
     go();
@@ -847,7 +840,25 @@ __d(function(g,_r,_i,a,m,_e,d){var e=_r(d[0]);Object.defineProperty(_e,"__esModu
 __d(function(g,_r,_i,a,m,_e,d){var e=_r(d[0]);Object.defineProperty(_e,"__esModule",{value:!0}),_e.default=function(e){const r=(0,l.useSafeAreaFrame)(),v=(0,l.useSafeAreaInsets)(),p=n.useContext(s.default),y=n.useContext(c.default),{focused:h,modal:_=!1,header:b,headerShown:E=!0,headerTransparent:P,headerStatusBarHeight:x=(p?0:v.top),navigation:w,route:M,children:O,style:S}=e,[j,C]=n.useState(()=>(0,i.default)(r,_,x));return n.createElement(u.default,{accessibilityElementsHidden:!h,importantForAccessibility:h?'auto':'no-hide-descendants',style:[f.container,S]},n.createElement(o.default,{style:f.content},n.createElement(s.default.Provider,{value:p||!1!==E},n.createElement(c.default.Provider,{value:E?j:y??0},O))),E?n.createElement(t.NavigationContext.Provider,{value:w},n.createElement(t.NavigationRouteContext.Provider,{value:M},n.createElement(o.default,{onLayout:e=>{const{height:t}=e.nativeEvent.layout;C(t)},style:P?f.absolute:null},b))):null)};var t=_r(d[1]),n=(function(e,t){if("function"==typeof WeakMap)var n=new WeakMap,r=new WeakMap;return(function(e,t){if(!t&&e&&e.__esModule)return e;var o,l,u={__proto__:null,default:e};if(null===e||"object"!=typeof e&&"function"!=typeof e)return u;if(o=t?r:n){if(o.has(e))return o.get(e);o.set(e,u)}for(const t in e)"default"!==t&&{}.hasOwnProperty.call(e,t)&&((l=(o=Object.defineProperty)&&Object.getOwnPropertyDescriptor(e,t))&&(l.get||l.set)?o(u,t,l):u[t]=e[t]);return u})(e,t)})(_r(d[2])),r=e(_r(d[3])),o=e(_r(d[4])),l=_r(d[5]),u=e(_r(d[6])),i=e(_r(d[7])),c=e(_r(d[8])),s=e(_r(d[9]));const f=r.default.create({container:{flex:1,flexDirection:'column-reverse'},content:{flex:1},absolute:{position:'absolute',top:0,left:0,right:0}})},697,[1,572,14,27,155,676,672,673,692,683]);
 __d(function(g,r,i,a,m,e,d){Object.defineProperty(e,"__esModule",{value:!0})},698,[]);
 __d(function(g,_r,_i,a,m,_e,d){var e=_r(d[0]);Object.defineProperty(_e,"__esModule",{value:!0}),_e.default=function(){const[e,i]=(0,t.useState)([]),c=(0,u.useNavigation)();return(0,t.useEffect)(()=>{let e=!0;return(0,o.fetchProducts)().then(t=>{e&&i(t)}).catch(t=>{console.error(t),e&&i([])}),()=>{e=!1}},[]),(0,f.jsx)(n.default,{contentContainerStyle:{padding:16,gap:12},children:e.map(e=>(0,f.jsx)(r.default,{item:e,onPress:(evt)=>navWithSquareReveal(function(){c.navigate('ProductDetail',{item:e})}, evt)},e.id))})};var t=(function(e,t){if("function"==typeof WeakMap)var n=new WeakMap,r=new WeakMap;return(function(e,t){if(!t&&e&&e.__esModule)return e;var o,u,f={__proto__:null,default:e};if(null===e||"object"!=typeof e&&"function"!=typeof e)return f;if(o=t?r:n){if(o.has(e))return o.get(e);o.set(e,f)}for(const t in e)"default"!==t&&{}.hasOwnProperty.call(e,t)&&((u=(o=Object.defineProperty)&&Object.getOwnPropertyDescriptor(e,t))&&(u.get||u.set)?o(f,t,u):f[t]=e[t]);return f})(e,t)})(_r(d[1])),n=e(_r(d[2])),r=e(_r(d[3])),o=_r(d[4]),u=_r(d[5]),f=_r(d[6])},699,[1,14,449,700,701,572,702]);
-__d(function(g,r,i,a,m,e,d){var l=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.default=function({item:l,onPress:f}){return(0,c.jsxs)(n.default,{onPress:(evt)=>{f?.(evt)},style:({pressed:l})=>({transform:[{scale:l?.98:1}],borderWidth:1,borderColor:'#e5e7eb',borderRadius:8,padding:12,flexDirection:'row',gap:12,cursor:'pointer',backgroundColor:'#fff'}),children:[(0,c.jsx)(t.default,{source:{uri:l.image_url||'https://placehold.co/400x240'},style:{width:72,height:72,borderRadius:8}}),(0,c.jsxs)(s.default,{style:{flex:1},children:[(0,c.jsx)(o.default,{style:{fontWeight:'700',fontSize:16},children:l.name}),l.vendor?(0,c.jsx)(o.default,{style:{color:'#666'},children:l.vendor}):null,l.short_desc?(0,c.jsx)(o.default,{numberOfLines:2,children:l.short_desc}):null]})]})};l(r(d[1]));var s=l(r(d[2])),o=l(r(d[3])),t=l(r(d[4])),n=l(r(d[5])),u=(l(r(d[6])),r(d[7])),c=r(d[8])},700,[1,14,155,446,455,565,83,701,702]);
+__d(function(g,r,i,a,m,e,d){var l=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.default=function({item:l,onPress:f}){return(0,c.jsxs)(n.default,{
+  testID:"product-card-"+l.id,
+  nativeID:"product-card-"+l.id,
+  onPress:(evt)=>{f?.(evt)},
+  style:({pressed:l})=>({transform:[{scale:l?.98:1}],borderWidth:1,borderColor:'#e5e7eb',borderRadius:8,padding:12,flexDirection:'row',gap:12,cursor:'pointer',backgroundColor:'#fff'}),
+  children:[
+    (0,c.jsx)(t.default,{source:{uri:l.image_url||'https://placehold.co/400x240'},style:{width:72,height:72,borderRadius:8}}),
+    (0,c.jsxs)(s.default,{style:{flex:1},children:[
+      (0,c.jsx)(o.default,{
+        testID:"product-title-"+l.id,
+        nativeID:"product-title-"+l.id,
+        style:{fontWeight:'700',fontSize:16},
+        children:l.name
+      }),
+      l.vendor?(0,c.jsx)(o.default,{style:{color:'#666'},children:l.vendor}):null,
+      l.short_desc?(0,c.jsx)(o.default,{numberOfLines:2,children:l.short_desc}):null
+    ]})
+  ]
+})};l(r(d[1]));var s=l(r(d[2])),o=l(r(d[3])),t=l(r(d[4])),n=l(r(d[5])),u=(l(r(d[6])),r(d[7])),c=r(d[8])},700,[1,14,155,446,455,565,83,701,702]);
 __d(function(g,_r,i,a,m,e,d){Object.defineProperty(e,"__esModule",{value:!0}),e.API=void 0,e.fetchProducts=async function(){const n=await fetch(`${t}/products`);if(!n.ok)throw new Error(`Products failed: ${n.status}`);const o=await n.json();return Array.isArray(o?.items)?o.items:[]},e.fetchSummary=async function(){const n=await fetch(`${t}/stats/summary`);if(!n.ok)throw new Error(`Summary failed: ${n.status}`);const o=await n.json();return Array.isArray(o?.items)?o.items:[]},e.getGoals=async function(n){const o={};n&&(o['X-Admin-Token']=n);const r=await fetch(`${t}/goals`,{headers:o});if(403===r.status)return null;if(!r.ok)throw new Error(`Goals failed: ${r.status}`);return r.json()},e.saveGoal=async function(n,o){const r={'Content-Type':'application/json'};o&&(r['X-Admin-Token']=o);const s=await fetch(`${t}/goals`,{method:'POST',headers:r,body:JSON.stringify({monthly_target:n})});if(!s.ok)throw new Error(`Save goal failed: ${s.status}`);return s.json()},e.trackClick=async function(n){return fetch(`${t}/track/${encodeURIComponent(n)}`)};const t=e.API="/api".replace(/\/$/,'')},701,[]);
 __d(function(g,r,i,a,m,e,d){'use strict';m.exports=r(d[0])},702,[703]);
 __d(function(_g,r,i,_a,_m,_e,_d){
