@@ -134,31 +134,51 @@ function navWithSquareReveal(go, evt){
   try{
     var html = document.documentElement;
 
-    // Default = center (only used if we truly have no event info)
+    // Default fallback (only if everything fails)
     var x = window.innerWidth / 2;
     var y = window.innerHeight / 2;
 
-    // 1) BEST SOURCE: pointer coordinates from RN Web nativeEvent
-    // RN Web usually provides pageX/pageY or clientX/clientY here.
-    var ne = evt && evt.nativeEvent;
-    if(ne){
-      if(ne.pageX != null && ne.pageY != null){
-        x = ne.pageX;
-        y = ne.pageY;
-      } else if(ne.clientX != null && ne.clientY != null){
-        x = ne.clientX;
-        y = ne.clientY;
-      }
+    // Pull nativeEvent (React Native Web wraps real DOM events)
+    var ne = evt && evt.nativeEvent ? evt.nativeEvent : evt;
+
+    // 1) Prefer viewport coordinates (clientX/clientY)
+    if(ne && ne.clientX != null && ne.clientY != null){
+      x = ne.clientX;
+      y = ne.clientY;
+    }
+    // 2) Fallback: pageX/pageY -> convert to viewport coords
+    else if(ne && ne.pageX != null && ne.pageY != null){
+      x = ne.pageX - window.scrollX;
+      y = ne.pageY - window.scrollY;
     }
 
-    // 2) NICE-TO-HAVE: element center (only if it's a real DOM node)
-    // This makes the origin "card center" instead of exact click point.
-    var el = (evt && (evt.currentTarget || evt.target)) ||
-             (ne && ne.target) ||
-             null;
+    // 3) Find the REAL DOM element under the pointer
+    var domEl = null;
+    if(document.elementFromPoint){
+      domEl = document.elementFromPoint(x, y);
+    }
 
-    if(el && el.getBoundingClientRect){
-      var r = el.getBoundingClientRect();
+    // 4) Walk up to a likely "card" wrapper:
+    // RN Web often renders Pressable/Touchable as role="button"
+    function findClickable(el){
+      while(el && el !== document.body && el !== document.documentElement){
+        if(
+          (el.getAttribute && el.getAttribute("role") === "button") ||
+          (el.tagName && (el.tagName.toLowerCase() === "a" || el.tagName.toLowerCase() === "button")) ||
+          (el.onclick != null)
+        ){
+          return el;
+        }
+        el = el.parentElement;
+      }
+      return null;
+    }
+
+    var clickable = findClickable(domEl) || domEl;
+
+    // 5) Use the clickable element's CENTER as the wipe origin
+    if(clickable && clickable.getBoundingClientRect){
+      var r = clickable.getBoundingClientRect();
       x = r.left + r.width / 2;
       y = r.top + r.height / 2;
     }
