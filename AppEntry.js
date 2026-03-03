@@ -203,7 +203,7 @@ function navWithSquareReveal(go, evt){
     setTimeout(function(){
       html.classList.remove("reveal-start");
       html.classList.remove("reveal-anim");
-    }, 650);
+    }, 1300);
 
   }catch(e){
     go();
