@@ -130,47 +130,68 @@ __d(function(g,r,_i,a,m,e,d){m.exports=function n(o,t,f){var i,s,c,u;for(i=0,s=o
 __d(function(g,r,_i,a,m,e,d){function n(n,t){var u,f,i=n.type,s=n.value;return t&&void 0!==(f=t(n))?f:"word"===i||"space"===i?s:"string"===i?(u=n.quote||"")+s+(n.unclosed?"":u):"comment"===i?"/*"+s+(n.unclosed?"":"*/"):"div"===i?(n.before||"")+s+(n.after||""):Array.isArray(n.nodes)?(u=o(n.nodes,t),"function"!==i?u:s+"("+(n.before||"")+u+(n.after||"")+(n.unclosed?"":")")):s}function o(o,t){var u,f;if(Array.isArray(o)){for(u="",f=o.length-1;~f;f-=1)u=n(o[f],t)+u;return u}return n(o,t)}m.exports=o},81,[]);
 __d(function(g,r,i,a,m,e,d){var t="-".charCodeAt(0),o="+".charCodeAt(0),c=".".charCodeAt(0),h="e".charCodeAt(0),A="E".charCodeAt(0);function C(h){var A,C=h.charCodeAt(0);if(C===o||C===t){if((A=h.charCodeAt(1))>=48&&A<=57)return!0;var n=h.charCodeAt(2);return A===c&&n>=48&&n<=57}return C===c?(A=h.charCodeAt(1))>=48&&A<=57:C>=48&&C<=57}m.exports=function(n){var f,u,v,l=0,s=n.length;if(0===s||!C(n))return!1;for((f=n.charCodeAt(l))!==o&&f!==t||l++;l<s&&!((f=n.charCodeAt(l))<48||f>57);)l+=1;if(f=n.charCodeAt(l),u=n.charCodeAt(l+1),f===c&&u>=48&&u<=57)for(l+=2;l<s&&!((f=n.charCodeAt(l))<48||f>57);)l+=1;if(f=n.charCodeAt(l),u=n.charCodeAt(l+1),v=n.charCodeAt(l+2),(f===h||f===A)&&(u>=48&&u<=57||(u===o||u===t)&&v>=48&&v<=57))for(l+=u===o||u===t?3:2;l<s&&!((f=n.charCodeAt(l))<48||f>57);)l+=1;return{number:n.slice(0,l),unit:n.slice(l)}}},82,[]);
 __d(function(g,r,i,a,m,e,d){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var t={OS:'web',select:t=>'web'in t?t.web:t.default,get isTesting(){return!1}};e.default=t},83,[]);
-function navWithSquareReveal(go, evt, pid){
-  // Declare everything up front so debugging/logging can never crash the app
-  var html    = document.documentElement;
+function navWithSquareReveal(go, evt, pid) {
+  try {
+    var html = document.documentElement;
 
-  // Default fallback: center of screen (only used if all lookups fail)
-  var x       = window.innerWidth / 2;
-  var y       = window.innerHeight / 2;
+    // ------------------------------------------------------------
+    // 1) Default fallback origin (only used if everything fails)
+    // ------------------------------------------------------------
+    var x = window.innerWidth / 2;
+    var y = window.innerHeight / 2;
 
-  // RN Web often wraps DOM events. Prefer nativeEvent when present.
-  var ne      = null;
+    // RN Web sometimes wraps events; unwrap if needed
+    var ne = evt && evt.nativeEvent ? evt.nativeEvent : evt;
 
-  // The element we start from (what was clicked)
-  var startEl = null;
+    // ------------------------------------------------------------
+    // 2) Best DOM anchor: evt.currentTarget (the element that has onPress)
+    // This is MUCH more reliable than evt.target in RN-web.
+    // ------------------------------------------------------------
+    var startEl =
+      (evt && evt.currentTarget) ||
+      (ne && ne.currentTarget) ||
+      (ne && ne.target) ||
+      (evt && evt.target) ||
+      null;
 
-  // The product card element we want to resolve
-  var cardEl  = null;
+    // ------------------------------------------------------------
+    // 3) If we have pointer coords, use them as a fallback
+    // (Different browsers/RN layers expose different fields)
+    // ------------------------------------------------------------
+    var cx = ne && (ne.clientX != null ? ne.clientX : null);
+    var cy = ne && (ne.clientY != null ? ne.clientY : null);
 
-  // The product title element inside the card (best origin point)
-  var titleEl = null;
+    // Some RN events use pageX/pageY
+    if (cx == null && ne && ne.pageX != null) cx = ne.pageX - window.scrollX;
+    if (cy == null && ne && ne.pageY != null) cy = ne.pageY - window.scrollY;
 
-  // Bounding rect used to compute center
-  var r       = null;
+    // Some RN events use locationX/locationY relative to the element
+    // Convert to viewport coords if we also have startEl
+    if ((cx == null || cy == null) && ne && ne.locationX != null && startEl && startEl.getBoundingClientRect) {
+      var rr0 = startEl.getBoundingClientRect();
+      cx = rr0.left + ne.locationX;
+      cy = rr0.top + ne.locationY;
+    }
 
-  try{
-    // RN Web wraps DOM events, so pull nativeEvent if it exists
-    ne = (evt && evt.nativeEvent) ? evt.nativeEvent : evt;
+    if (cx != null && cy != null) {
+      x = cx;
+      y = cy;
+    }
 
-    // Helper: find the nearest product card using BOTH data-testid and id (nativeID)
-    function findCardFromElement(el){
-      if(!el) return null;
+    // ------------------------------------------------------------
+    // Helper: find the product card wrapper
+    // ------------------------------------------------------------
+    function findCardFromElement(el) {
+      if (!el) return null;
 
-      // Modern browsers: closest() is easiest and fastest
-      if(el.closest){
+      if (el.closest) {
         return el.closest('[data-testid^="product-card-"], [id^="product-card-"]');
       }
 
-      // Fallback manual walk up the DOM tree
-      while(el && el !== document.body && el !== document.documentElement){
+      while (el && el !== document.body && el !== document.documentElement) {
         var tid = el.getAttribute && el.getAttribute("data-testid");
-        var id  = el.getAttribute && el.getAttribute("id");
-        if((tid && tid.indexOf("product-card-") === 0) || (id && id.indexOf("product-card-") === 0)){
+        var id = el.getAttribute && el.getAttribute("id");
+        if ((tid && tid.indexOf("product-card-") === 0) || (id && id.indexOf("product-card-") === 0)) {
           return el;
         }
         el = el.parentElement;
@@ -178,57 +199,79 @@ function navWithSquareReveal(go, evt, pid){
       return null;
     }
 
-    // 1) Prefer the actual event target (best chance to locate the right card)
-    // NOTE: some RN Web events have target on evt, some on ne, so we check both.
-    startEl = (ne && ne.target) ? ne.target : ((evt && evt.target) ? evt.target : null);
+    // ------------------------------------------------------------
+    // 4) Try to locate the clicked card *from currentTarget first*
+    // ------------------------------------------------------------
+    var cardEl = findCardFromElement(startEl);
 
-    // 2) If we have pointer coords, record them (useful fallback for elementFromPoint)
-    // clientX/clientY are viewport coords (best for elementFromPoint)
-    if(ne && ne.clientX != null && ne.clientY != null){
-      x = ne.clientX;
-      y = ne.clientY;
-    }
-    // pageX/pageY are document coords -> convert to viewport coords
-    else if(ne && ne.pageX != null && ne.pageY != null){
-      x = ne.pageX - window.scrollX;
-      y = ne.pageY - window.scrollY;
-    }
-
-    // 3) Try locating the card from the target first
-    cardEl = findCardFromElement(startEl);
-
-    // 4) If target lookup failed, try elementFromPoint using whatever x/y we have
-    // This helps when target is a non-DOM RN wrapper node.
-    if(!cardEl && document.elementFromPoint){
+    // If still not found, try elementFromPoint using x/y
+    if (!cardEl && document.elementFromPoint) {
       var domEl = document.elementFromPoint(x, y);
       cardEl = findCardFromElement(domEl);
     }
 
-    // 5) If we found the card, set origin to the TITLE center (prefer title over button)
-    if(cardEl && cardEl.getBoundingClientRect){
-      // Try to find the product title element within this card
-      titleEl = cardEl.querySelector && cardEl.querySelector(
-        '[data-testid^="product-title-"], [id^="product-title-"]'
-      );
+    // ------------------------------------------------------------
+    // 5) Compute origin from the TITLE CENTER inside the clicked card
+    // IMPORTANT: search INSIDE cardEl (avoids duplicate IDs across screens)
+    // ------------------------------------------------------------
+    if (cardEl && cardEl.querySelector && cardEl.getBoundingClientRect) {
+      var titleEl = null;
 
-      r = (titleEl && titleEl.getBoundingClientRect)
-        ? titleEl.getBoundingClientRect()
-        : cardEl.getBoundingClientRect();
-
-      x = r.left + (r.width / 2);
-      y = r.top  + (r.height / 2);
-    }
-
-    // 6) FORCE origin using product title id (most reliable)
-    // This bypasses RN Web event weirdness entirely.
-    if(pid != null){
-      var forcedTitle = document.getElementById("product-title-" + pid);
-      if(forcedTitle && forcedTitle.getBoundingClientRect){
-        var rr = forcedTitle.getBoundingClientRect();
-        x = rr.left + (rr.width / 2);
-        y = rr.top  + (rr.height / 2);
+      // Prefer an exact pid match IF we have one
+      if (pid != null) {
+        titleEl =
+          cardEl.querySelector('#product-title-' + pid) ||
+          cardEl.querySelector('[data-testid="product-title-' + pid + '"]');
       }
+
+      // Otherwise, fallback to "any title" inside that card
+      if (!titleEl) {
+        titleEl =
+          cardEl.querySelector('[data-testid^="product-title-"]') ||
+          cardEl.querySelector('[id^="product-title-"]');
+      }
+
+      // Use title rect if valid; otherwise card rect
+      var r = null;
+      if (titleEl && titleEl.getBoundingClientRect) {
+        r = titleEl.getBoundingClientRect();
+        // If the rect is all zeros (hidden/duplicate/offscreen), ignore it
+        if (!r || (!r.width && !r.height)) r = null;
+      }
+      if (!r) r = cardEl.getBoundingClientRect();
+
+      x = r.left + r.width / 2;
+      y = r.top + r.height / 2;
     }
+
+    // ------------------------------------------------------------
+    // 6) Store origin for CSS reveal
+    // ------------------------------------------------------------
+    html.style.setProperty("--wipe-x", x + "px");
+    html.style.setProperty("--wipe-y", y + "px");
+
+    // Start clipped, then navigate, then expand
+    html.classList.remove("reveal-anim");
+    html.classList.add("reveal-start");
+
+    go();
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        html.classList.add("reveal-anim");
+      });
+    });
+
+    // Cleanup after animation duration
+    var ms = parseInt(getComputedStyle(html).getPropertyValue("--reveal-ms")) || 650;
+    setTimeout(function () {
+      html.classList.remove("reveal-start");
+      html.classList.remove("reveal-anim");
+    }, ms + 60);
+  } catch (e) {
+    go();
+  }
+}
 
     // OPTIONAL DEBUG (safe: x/y always defined). Remove after testing.
     // console.log("reveal origin debug", {
