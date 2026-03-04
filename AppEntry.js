@@ -134,43 +134,65 @@ function navWithSquareReveal(go, evt){
   try{
     var html = document.documentElement;
 
-    // Fallback origin (only if everything fails)
+    // Default fallback: center of screen
     var x = window.innerWidth / 2;
     var y = window.innerHeight / 2;
 
     // RN Web wraps DOM events, so pull nativeEvent if it exists
     var ne = evt && evt.nativeEvent ? evt.nativeEvent : evt;
 
-    // 1) Prefer viewport coords
-    if(ne && ne.clientX != null && ne.clientY != null){
-      x = ne.clientX;
-      y = ne.clientY;
-    }
-    // 2) Fallback: page coords -> viewport
-    else if(ne && ne.pageX != null && ne.pageY != null){
-      x = ne.pageX - window.scrollX;
-      y = ne.pageY - window.scrollY;
-    }
+    // Helper: find the nearest product card using BOTH data-testid and id (nativeID)
+    function findCardFromElement(el){
+      if(!el) return null;
 
-    // Element under the pointer
-    // Use the actual event target instead of elementFromPoint
-    var domEl = ne && ne.target ? ne.target : null;
+      // Modern browsers: closest() is easiest
+      if(el.closest){
+        return el.closest('[data-testid^="product-card-"], [id^="product-card-"]');
+      }
 
-    function closestProductCard(el){
+      // Fallback manual walk
       while(el && el !== document.body && el !== document.documentElement){
         var tid = el.getAttribute && el.getAttribute("data-testid");
-        if(tid && tid.indexOf("product-card-") === 0) return el;
+        var id  = el.getAttribute && el.getAttribute("id");
+        if((tid && tid.indexOf("product-card-") === 0) || (id && id.indexOf("product-card-") === 0)){
+          return el;
+        }
         el = el.parentElement;
       }
       return null;
     }
 
-    var cardEl = closestProductCard(domEl);
+    // 1) Prefer the actual event target (best chance to locate the right card)
+    var startEl = (ne && ne.target) ? ne.target : (evt && evt.target ? evt.target : null);
 
-    // If we found the card, prefer the TITLE center as the origin
+    // 2) If we also have pointer coords, keep them (nice fallback)
+    if(ne && ne.clientX != null && ne.clientY != null){
+      x = ne.clientX;
+      y = ne.clientY;
+    } else if(ne && ne.pageX != null && ne.pageY != null){
+      x = ne.pageX - window.scrollX;
+      y = ne.pageY - window.scrollY;
+    }
+
+    // 3) Try locating the card from the target first
+    var cardEl = findCardFromElement(startEl);
+
+    // 4) If target lookup failed, try elementFromPoint using whatever x/y we have
+    if(!cardEl && document.elementFromPoint){
+      var domEl = document.elementFromPoint(x, y);
+      cardEl = findCardFromElement(domEl);
+    }
+
+    // 5) If we found the card, set origin to the TITLE center (prefer title over button)
     if(cardEl && cardEl.getBoundingClientRect){
-      var titleEl = cardEl.querySelector && cardEl.querySelector('[data-testid^="product-title-"]');
-      var r = (titleEl && titleEl.getBoundingClientRect) ? titleEl.getBoundingClientRect() : cardEl.getBoundingClientRect();
+      var titleEl = cardEl.querySelector && cardEl.querySelector(
+        '[data-testid^="product-title-"], [id^="product-title-"]'
+      );
+
+      var r = (titleEl && titleEl.getBoundingClientRect)
+        ? titleEl.getBoundingClientRect()
+        : cardEl.getBoundingClientRect();
+
       x = r.left + (r.width / 2);
       y = r.top + (r.height / 2);
     }
