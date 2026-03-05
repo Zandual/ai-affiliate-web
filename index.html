@@ -317,6 +317,12 @@
         transform: translateY(0px) scale(0.99);
       }
 
+      /* Helps some RN Web Text nodes report non-zero layout boxes */
+      [id^="product-title-"],
+      [data-testid^="product-title-"] {
+        display: inline-block;
+      }
+
       /* On small screens: center it so it doesn’t cover content oddly */
       @media (max-width: 520px) {
         #home-wow {
