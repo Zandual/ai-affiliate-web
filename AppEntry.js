@@ -134,123 +134,84 @@ function navWithSquareReveal(go, evt, pid) {
   try {
     var html = document.documentElement;
 
-    // ------------------------------------------------------------
-    // 1) Default fallback origin (only used if everything fails)
-    // ------------------------------------------------------------
+    // Fallback: center of viewport
     var x = window.innerWidth / 2;
     var y = window.innerHeight / 2;
 
-    // RN Web sometimes wraps events; unwrap if needed
+    // RN Web wraps events, so prefer nativeEvent
     var ne = evt && evt.nativeEvent ? evt.nativeEvent : evt;
 
-    // ------------------------------------------------------------
-    // 2) Best DOM anchor: evt.currentTarget (the element that has onPress)
-    // This is MUCH more reliable than evt.target in RN-web.
-    // ------------------------------------------------------------
-    var startEl =
-      (evt && evt.currentTarget) ||
-      (ne && ne.currentTarget) ||
-      (ne && ne.target) ||
-      (evt && evt.target) ||
-      null;
-
-    // ------------------------------------------------------------
-    // 3) If we have pointer coords, use them as a fallback
-    // (Different browsers/RN layers expose different fields)
-    // ------------------------------------------------------------
-    var cx = ne && (ne.clientX != null ? ne.clientX : null);
-    var cy = ne && (ne.clientY != null ? ne.clientY : null);
-
-    // Some RN events use pageX/pageY
-    if (cx == null && ne && ne.pageX != null) cx = ne.pageX - window.scrollX;
-    if (cy == null && ne && ne.pageY != null) cy = ne.pageY - window.scrollY;
-
-    // Some RN events use locationX/locationY relative to the element
-    // Convert to viewport coords if we also have startEl
-    if ((cx == null || cy == null) && ne && ne.locationX != null && startEl && startEl.getBoundingClientRect) {
-      var rr0 = startEl.getBoundingClientRect();
-      cx = rr0.left + ne.locationX;
-      cy = rr0.top + ne.locationY;
+    // --- Helper: safe rect -> center
+    function rectCenter(r) {
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
 
-    if (cx != null && cy != null) {
-      x = cx;
-      y = cy;
-    }
+    // --- Helper: measure TEXT when element rect is 0x0 (RN Web can do that)
+    function getTextRect(el) {
+      try {
+        if (!el) return null;
+        // If element has a normal rect, use it
+        var r = el.getBoundingClientRect && el.getBoundingClientRect();
+        if (r && r.width > 0 && r.height > 0) return r;
 
-    // ------------------------------------------------------------
-    // Helper: find the product card wrapper
-    // ------------------------------------------------------------
-    function findCardFromElement(el) {
-      if (!el) return null;
+        // Otherwise try measuring the first text node with a Range()
+        var tn = el.firstChild;
+        if (!tn || tn.nodeType !== 3) return r || null; // 3 = TEXT_NODE
 
-      if (el.closest) {
-        return el.closest('[data-testid^="product-card-"], [id^="product-card-"]');
+        var range = document.createRange();
+        range.selectNodeContents(tn);
+        var rr = range.getBoundingClientRect();
+        return rr || r || null;
+      } catch (e) {
+        return null;
       }
+    }
 
-      while (el && el !== document.body && el !== document.documentElement) {
-        var tid = el.getAttribute && el.getAttribute("data-testid");
-        var id = el.getAttribute && el.getAttribute("id");
-        if ((tid && tid.indexOf("product-card-") === 0) || (id && id.indexOf("product-card-") === 0)) {
-          return el;
+    // 1) If pid exists, FORCE origin from the product title on the HOME list
+    //    (this is the most deterministic approach)
+    if (pid != null) {
+      var titleEl =
+        document.getElementById("product-title-" + pid) ||
+        document.querySelector('[data-testid="product-title-' + pid + '"]');
+
+      var tr = getTextRect(titleEl);
+      if (tr && (tr.width > 0 || tr.height > 0)) {
+        var c = rectCenter(tr);
+        x = c.x;
+        y = c.y;
+      }
+    }
+
+    // 2) If pid failed (or not provided), try pointer coords from the event
+    if (ne) {
+      // Best: viewport coords
+      if (ne.clientX != null && ne.clientY != null) {
+        x = ne.clientX;
+        y = ne.clientY;
+      }
+      // Next: page coords -> viewport coords
+      else if (ne.pageX != null && ne.pageY != null) {
+        x = ne.pageX - window.scrollX;
+        y = ne.pageY - window.scrollY;
+      }
+      // RN Web sometimes gives locationX/locationY relative to target
+      else if (ne.locationX != null && ne.locationY != null) {
+        // If currentTarget is an element, convert local->viewport using its rect
+        var ct = (evt && evt.currentTarget) || (ne && ne.currentTarget);
+        var el = ct && ct.getBoundingClientRect ? ct : null;
+        if (el) {
+          var cr = el.getBoundingClientRect();
+          x = cr.left + ne.locationX;
+          y = cr.top + ne.locationY;
         }
-        el = el.parentElement;
       }
-      return null;
     }
 
-    // ------------------------------------------------------------
-    // 4) Try to locate the clicked card *from currentTarget first*
-    // ------------------------------------------------------------
-    var cardEl = findCardFromElement(startEl);
-
-    // If still not found, try elementFromPoint using x/y
-    if (!cardEl && document.elementFromPoint) {
-      var domEl = document.elementFromPoint(x, y);
-      cardEl = findCardFromElement(domEl);
-    }
-
-    // ------------------------------------------------------------
-    // 5) Compute origin from the TITLE CENTER inside the clicked card
-    // IMPORTANT: search INSIDE cardEl (avoids duplicate IDs across screens)
-    // ------------------------------------------------------------
-    if (cardEl && cardEl.querySelector && cardEl.getBoundingClientRect) {
-      var titleEl = null;
-
-      // Prefer an exact pid match IF we have one
-      if (pid != null) {
-        titleEl =
-          cardEl.querySelector('#product-title-' + pid) ||
-          cardEl.querySelector('[data-testid="product-title-' + pid + '"]');
-      }
-
-      // Otherwise, fallback to "any title" inside that card
-      if (!titleEl) {
-        titleEl =
-          cardEl.querySelector('[data-testid^="product-title-"]') ||
-          cardEl.querySelector('[id^="product-title-"]');
-      }
-
-      // Use title rect if valid; otherwise card rect
-      var r = null;
-      if (titleEl && titleEl.getBoundingClientRect) {
-        r = titleEl.getBoundingClientRect();
-        // If the rect is all zeros (hidden/duplicate/offscreen), ignore it
-        if (!r || (!r.width && !r.height)) r = null;
-      }
-      if (!r) r = cardEl.getBoundingClientRect();
-
-      x = r.left + r.width / 2;
-      y = r.top + r.height / 2;
-    }
-
-    // ------------------------------------------------------------
-    // 6) Store origin for CSS reveal
-    // ------------------------------------------------------------
+    // Store origin for CSS
     html.style.setProperty("--wipe-x", x + "px");
     html.style.setProperty("--wipe-y", y + "px");
 
-    // Start clipped, then navigate, then expand
+    // Start clipped, navigate, then expand
     html.classList.remove("reveal-anim");
     html.classList.add("reveal-start");
 
@@ -262,7 +223,7 @@ function navWithSquareReveal(go, evt, pid) {
       });
     });
 
-    // Cleanup after animation duration
+    // Cleanup after duration
     var ms = parseInt(getComputedStyle(html).getPropertyValue("--reveal-ms")) || 650;
     setTimeout(function () {
       html.classList.remove("reveal-start");
@@ -271,54 +232,6 @@ function navWithSquareReveal(go, evt, pid) {
   } catch (e) {
     go();
   }
-}
-
-    // OPTIONAL DEBUG (safe: x/y always defined). Remove after testing.
-    // console.log("reveal origin debug", {
-    //   pid,
-    //   x, y,
-    //   hasClient: !!(ne && ne.clientX != null && ne.clientY != null),
-    //   startElTag: startEl && startEl.tagName,
-    //   startElId: startEl && startEl.id,
-    //   startElTestId: startEl && startEl.getAttribute && startEl.getAttribute("data-testid"),
-    //   cardFound: !!cardEl,
-    //   cardId: cardEl && cardEl.id,
-    //   cardTestId: cardEl && cardEl.getAttribute && cardEl.getAttribute("data-testid"),
-    //   titleFound: !!titleEl,
-    //   titleId: titleEl && titleEl.id,
-    //   titleTestId: titleEl && titleEl.getAttribute && titleEl.getAttribute("data-testid"),
-    //   titleText: titleEl && titleEl.textContent
-    // });
-
-  }catch(e){
-    // If origin detection fails, we still proceed using the fallback center x/y.
-    // (No need to stop navigation.)
-  }
-
-  // Store origin for CSS (px values expected)
-  html.style.setProperty("--wipe-x", x + "px");
-  html.style.setProperty("--wipe-y", y + "px");
-
-  // Start clipped, navigate, then expand
-  html.classList.remove("reveal-anim");
-  html.classList.add("reveal-start");
-
-  // Navigate now (content swaps while clipped)
-  try { go(); } catch(_e) {}
-
-  // Trigger the "expand" state in the next paint(s) so transitions run reliably
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      html.classList.add("reveal-anim");
-    });
-  });
-
-  // Cleanup after the CSS duration finishes (+ small buffer)
-  var ms = parseInt(getComputedStyle(html).getPropertyValue("--reveal-ms")) || 650;
-  setTimeout(function(){
-    html.classList.remove("reveal-start");
-    html.classList.remove("reveal-anim");
-  }, ms + 60);
 }
 __d(function(g,r,i,a,m,e,d){var n=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(){return(0,h.jsx)(c.NavigationContainer,{children:(0,h.jsxs)(v.Navigator,{screenOptions:{animation:"none"},children:[(0,h.jsx)(v.Screen,{name:"Home",component:l.default,options:({navigation:n})=>({headerRight:()=>(0,h.jsx)(o.default,{onPress:(evt)=>navWithSquareReveal(function(){n.navigate('Dashboard')}, evt),children:(0,h.jsx)(t.default,{children:"Dashboard"})})})}),(0,h.jsx)(v.Screen,{name:"ProductDetail",component:u.default,options:{title:'Product'}}),(0,h.jsx)(v.Screen,{name:"Dashboard",component:f.default})]})})},r(d[1]);n(r(d[2]));var t=n(r(d[3])),o=n(r(d[4])),c=r(d[5]),s=r(d[6]),l=n(r(d[7])),u=n(r(d[8])),f=n(r(d[9])),h=r(d[10]);const v=(0,s.createNativeStackNavigator)()},84,[1,85,14,446,565,572,668,699,704,708,702]);
 __d(function(g,r,i,a,m,e,d){var t=r(d[0]);Object.defineProperty(e,"__esModule",{value:!0}),Object.defineProperty(e,"BaseButton",{enumerable:!0,get:function(){return w.BaseButton}}),Object.defineProperty(e,"BorderlessButton",{enumerable:!0,get:function(){return w.BorderlessButton}}),Object.defineProperty(e,"Directions",{enumerable:!0,get:function(){return u.Directions}}),Object.defineProperty(e,"DrawerLayout",{enumerable:!0,get:function(){return D.default}}),Object.defineProperty(e,"DrawerLayoutAndroid",{enumerable:!0,get:function(){return F.DrawerLayoutAndroid}}),Object.defineProperty(e,"FlatList",{enumerable:!0,get:function(){return F.FlatList}}),Object.defineProperty(e,"FlingGestureHandler",{enumerable:!0,get:function(){return H.FlingGestureHandler}}),Object.defineProperty(e,"ForceTouchGestureHandler",{enumerable:!0,get:function(){return P.ForceTouchGestureHandler}}),Object.defineProperty(e,"Gesture",{enumerable:!0,get:function(){return B.GestureObjects}}),Object.defineProperty(e,"GestureDetector",{enumerable:!0,get:function(){return G.GestureDetector}}),Object.defineProperty(e,"GestureHandlerRootView",{enumerable:!0,get:function(){return l.default}}),Object.defineProperty(e,"HoverEffect",{enumerable:!0,get:function(){return R.HoverEffect}}),Object.defineProperty(e,"LongPressGestureHandler",{enumerable:!0,get:function(){return y.LongPressGestureHandler}}),Object.defineProperty(e,"MouseButton",{enumerable:!0,get:function(){return f.MouseButton}}),Object.defineProperty(e,"NativeViewGestureHandler",{enumerable:!0,get:function(){return T.NativeViewGestureHandler}}),Object.defineProperty(e,"PanGestureHandler",{enumerable:!0,get:function(){return s.PanGestureHandler}}),Object.defineProperty(e,"PinchGestureHandler",{enumerable:!0,get:function(){return O.PinchGestureHandler}}),Object.defineProperty(e,"PointerType",{enumerable:!0,get:function(){return c.PointerType}}),Object.defineProperty(e,"PureNativeButton",{enumerable:!0,get:function(){return w.PureNativeButton}}),Object.defineProperty(e,"RawButton",{enumerable:!0,get:function(){return w.RawButton}}),Object.defineProperty(e,"RectButton",{enumerable:!0,get:function(){return w.RectButton}}),Object.defineProperty(e,"RefreshControl",{enumerable:!0,get:function(){return F.RefreshControl}}),Object.defineProperty(e,"RotationGestureHandler",{enumerable:!0,get:function(){return j.RotationGestureHandler}}),Object.defineProperty(e,"ScrollView",{enumerable:!0,get:function(){return F.ScrollView}}),Object.defineProperty(e,"State",{enumerable:!0,get:function(){return o.State}}),Object.defineProperty(e,"Swipeable",{enumerable:!0,get:function(){return L.default}}),Object.defineProperty(e,"Switch",{enumerable:!0,get:function(){return F.Switch}}),Object.defineProperty(e,"TapGestureHandler",{enumerable:!0,get:function(){return p.TapGestureHandler}}),Object.defineProperty(e,"TextInput",{enumerable:!0,get:function(){return F.TextInput}}),Object.defineProperty(e,"TouchableHighlight",{enumerable:!0,get:function(){return v.TouchableHighlight}}),Object.defineProperty(e,"TouchableNativeFeedback",{enumerable:!0,get:function(){return v.TouchableNativeFeedback}}),Object.defineProperty(e,"TouchableOpacity",{enumerable:!0,get:function(){return v.TouchableOpacity}}),Object.defineProperty(e,"TouchableWithoutFeedback",{enumerable:!0,get:function(){return v.TouchableWithoutFeedback}}),Object.defineProperty(e,"createNativeWrapper",{enumerable:!0,get:function(){return h.default}}),Object.defineProperty(e,"enableExperimentalWebImplementation",{enumerable:!0,get:function(){return N.enableExperimentalWebImplementation}}),Object.defineProperty(e,"enableLegacyWebImplementation",{enumerable:!0,get:function(){return N.enableLegacyWebImplementation}}),Object.defineProperty(e,"gestureHandlerRootHOC",{enumerable:!0,get:function(){return b.default}});var n=r(d[1]),u=r(d[2]),o=r(d[3]),c=r(d[4]),b=t(r(d[5])),l=t(r(d[6])),f=r(d[7]),p=r(d[8]),P=r(d[9]),y=r(d[10]),s=r(d[11]),O=r(d[12]),j=r(d[13]),H=r(d[14]),h=t(r(d[15])),G=r(d[16]),B=r(d[17]),T=r(d[18]),w=r(d[19]),v=r(d[20]),F=r(d[21]),R=r(d[22]),L=t(r(d[23])),D=t(r(d[24])),N=r(d[25]);(0,n.initialize)()},85,[1,86,121,91,105,150,154,111,186,280,282,283,284,285,286,287,289,487,288,498,549,557,483,560,562,98]);
