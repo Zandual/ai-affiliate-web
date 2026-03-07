@@ -134,80 +134,143 @@ function navWithSquareReveal(go, evt, pid) {
   try {
     var html = document.documentElement;
 
-    // Fallback: center of viewport
+    // Default fallback: center of screen
     var x = window.innerWidth / 2;
     var y = window.innerHeight / 2;
 
-    // RN Web wraps events, so prefer nativeEvent
+    // RN Web wraps DOM events, so pull nativeEvent if it exists
     var ne = evt && evt.nativeEvent ? evt.nativeEvent : evt;
 
-    // --- Helper: safe rect -> center
+    // ---------- helpers ----------
     function rectCenter(r) {
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
 
-    // --- Helper: measure TEXT when element rect is 0x0 (RN Web can do that)
-    function getTextRect(el) {
+    // Find first TEXT node anywhere inside an element (deep search)
+    function findTextNode(root) {
       try {
-        if (!el) return null;
-        // If element has a normal rect, use it
-        var r = el.getBoundingClientRect && el.getBoundingClientRect();
-        if (r && r.width > 0 && r.height > 0) return r;
-
-        // Otherwise try measuring the first text node with a Range()
-        var tn = el.firstChild;
-        if (!tn || tn.nodeType !== 3) return r || null; // 3 = TEXT_NODE
-
-        var range = document.createRange();
-        range.selectNodeContents(tn);
-        var rr = range.getBoundingClientRect();
-        return rr || r || null;
+        if (!root) return null;
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode: function (n) {
+            return n.nodeValue && n.nodeValue.trim()
+              ? NodeFilter.FILTER_ACCEPT
+              : NodeFilter.FILTER_SKIP;
+          },
+        });
+        return walker.nextNode();
       } catch (e) {
         return null;
       }
     }
 
-    // 1) If pid exists, FORCE origin from the product title on the HOME list
-    //    (this is the most deterministic approach)
-    if (pid != null) {
-      var titleEl =
-        document.getElementById("product-title-" + pid) ||
-        document.querySelector('[data-testid="product-title-' + pid + '"]');
+    // Best-effort: return a non-zero rect for "what you see on screen"
+    function getVisualRect(el) {
+      try {
+        if (!el || !el.getBoundingClientRect) return null;
 
-      var tr = getTextRect(titleEl);
-      if (tr && (tr.width > 0 || tr.height > 0)) {
-        var c = rectCenter(tr);
-        x = c.x;
-        y = c.y;
-      }
-    }
+        // 1) Try the element itself
+        var r = el.getBoundingClientRect();
+        if (r && (r.width > 0 || r.height > 0)) return r;
 
-    // 2) If pid failed (or not provided), try pointer coords from the event
-    if (ne) {
-      // Best: viewport coords
-      if (ne.clientX != null && ne.clientY != null) {
-        x = ne.clientX;
-        y = ne.clientY;
-      }
-      // Next: page coords -> viewport coords
-      else if (ne.pageX != null && ne.pageY != null) {
-        x = ne.pageX - window.scrollX;
-        y = ne.pageY - window.scrollY;
-      }
-      // RN Web sometimes gives locationX/locationY relative to target
-      else if (ne.locationX != null && ne.locationY != null) {
-        // If currentTarget is an element, convert local->viewport using its rect
-        var ct = (evt && evt.currentTarget) || (ne && ne.currentTarget);
-        var el = ct && ct.getBoundingClientRect ? ct : null;
-        if (el) {
-          var cr = el.getBoundingClientRect();
-          x = cr.left + ne.locationX;
-          y = cr.top + ne.locationY;
+        // 2) Try a descendant element that actually has a box
+        if (el.querySelectorAll) {
+          var kids = el.querySelectorAll("*");
+          for (var i = 0; i < kids.length; i++) {
+            var kr = kids[i].getBoundingClientRect && kids[i].getBoundingClientRect();
+            if (kr && (kr.width > 0 || kr.height > 0)) return kr;
+          }
         }
+
+        // 3) Try the actual text node using a Range (often the most accurate)
+        var tn = findTextNode(el);
+        if (tn) {
+          var range = document.createRange();
+          range.selectNodeContents(tn);
+          var rr = range.getBoundingClientRect();
+          if (rr && (rr.width > 0 || rr.height > 0)) return rr;
+        }
+
+        return r || null;
+      } catch (e) {
+        return null;
       }
     }
 
-    // Store origin for CSS
+    // Helper: find nearest product card wrapper by data-testid or id
+    function findCardFromElement(el) {
+      if (!el) return null;
+
+      if (el.closest) {
+        return el.closest('[data-testid^="product-card-"], [id^="product-card-"]');
+      }
+
+      while (el && el !== document.body && el !== document.documentElement) {
+        var tid = el.getAttribute && el.getAttribute("data-testid");
+        var id = el.getAttribute && el.getAttribute("id");
+        if (
+          (tid && tid.indexOf("product-card-") === 0) ||
+          (id && id.indexOf("product-card-") === 0)
+        ) {
+          return el;
+        }
+        el = el.parentElement;
+      }
+      return null;
+    }
+
+    // ---------- pick origin ----------
+    // 0) Capture pointer coords (nice fallback)
+    if (ne && ne.clientX != null && ne.clientY != null) {
+      x = ne.clientX;
+      y = ne.clientY;
+    } else if (ne && ne.pageX != null && ne.pageY != null) {
+      x = ne.pageX - window.scrollX;
+      y = ne.pageY - window.scrollY;
+    }
+
+    // 1) BEST: If pid exists, force origin from the product title (deterministic)
+    if (pid != null) {
+      var titleById = document.getElementById("product-title-" + pid);
+      var titleByTestId = document.querySelector(
+        '[data-testid="product-title-' + pid + '"]'
+      );
+
+      var titleEl = titleById || titleByTestId;
+      var tr = getVisualRect(titleEl);
+
+      if (tr && (tr.width > 0 || tr.height > 0)) {
+        var c1 = rectCenter(tr);
+        x = c1.x;
+        y = c1.y;
+      }
+    }
+
+    // 2) If pid method didn’t work, try finding the clicked card and measuring its title
+    var startEl = (ne && ne.target) ? ne.target : (evt && evt.target ? evt.target : null);
+    var cardEl = findCardFromElement(startEl);
+
+    if (!cardEl && document.elementFromPoint) {
+      var domEl = document.elementFromPoint(x, y);
+      cardEl = findCardFromElement(domEl);
+    }
+
+    if (cardEl) {
+      var titleInsideCard =
+        (cardEl.querySelector && cardEl.querySelector('[data-testid^="product-title-"], [id^="product-title-"]')) ||
+        null;
+
+      var rr2 = getVisualRect(titleInsideCard) || getVisualRect(cardEl);
+      if (rr2 && (rr2.width > 0 || rr2.height > 0)) {
+        var c2 = rectCenter(rr2);
+        x = c2.x;
+        y = c2.y;
+      }
+    }
+
+    // DEBUG (optional): uncomment for one test run
+    // console.log("reveal origin ->", { pid: pid, x: x, y: y });
+
+    // Store origin for CSS (px values expected)
     html.style.setProperty("--wipe-x", x + "px");
     html.style.setProperty("--wipe-y", y + "px");
 
@@ -223,7 +286,7 @@ function navWithSquareReveal(go, evt, pid) {
       });
     });
 
-    // Cleanup after duration
+    // Cleanup after the CSS duration finishes (+ small buffer)
     var ms = parseInt(getComputedStyle(html).getPropertyValue("--reveal-ms")) || 650;
     setTimeout(function () {
       html.classList.remove("reveal-start");
