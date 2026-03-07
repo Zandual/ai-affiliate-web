@@ -446,18 +446,49 @@
       
       /* Start state: clip #root to a tiny square at (x,y) */
       html.reveal-start #root{
-        clip-path: inset(
-          calc(var(--wipe-y) - var(--reveal-size))
-          calc(100vw - var(--wipe-x) - var(--reveal-size))
-          calc(100vh - var(--wipe-y) - var(--reveal-size))
-          calc(var(--wipe-x) - var(--reveal-size))
+        clip-path: polygon(
+          calc(var(--wipe-x) - var(--reveal-size)) calc(var(--wipe-y) - var(--reveal-size)),
+          calc(var(--wipe-x) + var(--reveal-size)) calc(var(--wipe-y) - var(--reveal-size)),
+          calc(var(--wipe-x) + var(--reveal-size)) calc(var(--wipe-y) + var(--reveal-size)),
+          calc(var(--wipe-x) - var(--reveal-size)) calc(var(--wipe-y) + var(--reveal-size))
         );
       }
       
       /* Animate to full screen: the square expands until it reveals everything */
       html.reveal-anim #root{
         transition: clip-path var(--reveal-ms) var(--reveal-ease);
-        clip-path: inset(0 0 0 0);
+        clip-path: polygon(
+          -5vw -5vh,
+          105vw -5vh,
+          105vw 105vh,
+          -5vw 105vh
+        );
+      }
+
+      html.reveal-start body::after,
+      html.reveal-anim body::after{
+        content: "";
+        position: fixed;
+        left: calc(var(--wipe-x) - 8px);
+        top: calc(var(--wipe-y) - 8px);
+        width: 16px;
+        height: 16px;
+        border: 2px solid red;
+        box-sizing: border-box;
+        pointer-events: none;
+        z-index: 99999;
+      }
+      
+      html.reveal-anim body::after{
+        transition:
+          left var(--reveal-ms) var(--reveal-ease),
+          top var(--reveal-ms) var(--reveal-ease),
+          width var(--reveal-ms) var(--reveal-ease),
+          height var(--reveal-ms) var(--reveal-ease);
+        left: -5vw;
+        top: -5vh;
+        width: 110vw;
+        height: 110vh;
       }
       
       /* Accessibility */
