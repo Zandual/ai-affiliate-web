@@ -425,7 +425,7 @@
       /* =========================================================
          Square reveal transition (reveals the NEW page)
          Works by clipping #root to a tiny square at the click origin,
-         then expanding clip-path to full screen.
+         Then expanding the clip-path to full screen.
          ========================================================= */
 
       /* "Knobs" you can change later */
@@ -469,26 +469,23 @@
       html.reveal-anim body::after{
         content: "";
         position: fixed;
-        left: calc(var(--wipe-x) - 8px);
-        top: calc(var(--wipe-y) - 8px);
+        left: var(--wipe-x);
+        top: var(--wipe-y);
         width: 16px;
         height: 16px;
         border: 2px solid red;
         box-sizing: border-box;
         pointer-events: none;
         z-index: 99999;
+
+        /* center the square exactly on the origin point */
+        transform: translate(-50%, -50%) scale(1);
+        transform-origin: center center;
       }
       
       html.reveal-anim body::after{
-        transition:
-          left var(--reveal-ms) var(--reveal-ease),
-          top var(--reveal-ms) var(--reveal-ease),
-          width var(--reveal-ms) var(--reveal-ease),
-          height var(--reveal-ms) var(--reveal-ease);
-        left: -5vw;
-        top: -5vh;
-        width: 110vw;
-        height: 110vh;
+        transition: transform var(--reveal-ms) var(--reveal-ease);
+        transform: translate(-50%, -50%) scale(80);
       }
       
       /* Accessibility */
