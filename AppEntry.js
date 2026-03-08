@@ -146,6 +146,23 @@ function navWithSquareReveal(go, evt, pid) {
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
 
+    // Measure the actual rendered text bounds inside an element
+    function getTextRangeRect(el) {
+      try {
+        if (!el) return null;
+
+        var range = document.createRange();
+        range.selectNodeContents(el);
+
+        var r = range.getBoundingClientRect();
+        if (r && (r.width > 0 || r.height > 0)) return r;
+
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
     // Find first TEXT node anywhere inside an element (deep search)
     function findTextNode(root) {
       try {
@@ -181,7 +198,7 @@ function navWithSquareReveal(go, evt, pid) {
           }
         }
 
-        // 3) Try the actual text node using a Range (often the most accurate)
+        // 3) Try the actual text node using a Range
         var tn = findTextNode(el);
         if (tn) {
           var range = document.createRange();
@@ -228,7 +245,7 @@ function navWithSquareReveal(go, evt, pid) {
       y = ne.pageY - window.scrollY;
     }
 
-    // 1) BEST: If pid exists, force origin from the product title (deterministic)
+    // 1) BEST: If pid exists, force origin from the product title
     if (pid != null) {
       var titleById = document.getElementById("product-title-" + pid);
       var titleByTestId = document.querySelector(
@@ -236,7 +253,9 @@ function navWithSquareReveal(go, evt, pid) {
       );
 
       var titleEl = titleById || titleByTestId;
-      var tr = getVisualRect(titleEl);
+
+      // Prefer the real text bounds, not the stretched wrapper box
+      var tr = getTextRangeRect(titleEl) || getVisualRect(titleEl);
 
       if (tr && (tr.width > 0 || tr.height > 0)) {
         var c1 = rectCenter(tr);
@@ -259,7 +278,7 @@ function navWithSquareReveal(go, evt, pid) {
         (cardEl.querySelector && cardEl.querySelector('[data-testid^="product-title-"], [id^="product-title-"]')) ||
         null;
 
-      var rr2 = getVisualRect(titleInsideCard) || getVisualRect(cardEl);
+      var rr2 = getTextRangeRect(titleInsideCard) || getVisualRect(titleInsideCard) || getVisualRect(cardEl);
       if (rr2 && (rr2.width > 0 || rr2.height > 0)) {
         var c2 = rectCenter(rr2);
         x = c2.x;
