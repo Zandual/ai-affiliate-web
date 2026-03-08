@@ -430,7 +430,7 @@
 
       /* "Knobs" you can change later */
       :root{
-        --reveal-ms: 10000ms;                      /* 380ms = snappier, 650ms = cinematic, 2000ms = debugging */
+        --reveal-ms: 850ms;                      /* 380ms = snappier, 650ms to 850ms = cinematic, 2000ms or more = debugging */
         --reveal-ease: cubic-bezier(.2,.9,.2,1);
         --reveal-size: 2px;                       /* starting square half-size (2px–12px) */
       
@@ -465,7 +465,7 @@
         );
       }
 
-      html.reveal-start body::after,
+      /* html.reveal-start body::after,
       html.reveal-anim body::after{
         content: "";
         position: fixed;
@@ -479,14 +479,14 @@
         z-index: 99999;
 
         /* center the square exactly on the origin point */
-        transform: translate(-50%, -50%) scale(1);
+        /* transform: translate(-50%, -50%) scale(1);
         transform-origin: center center;
-      }
+      }  */
       
-      html.reveal-anim body::after{
-        transition: transform var(--reveal-ms) var(--reveal-ease);
+      /* html.reveal-anim body::after{ */
+       /* transition: transform var(--reveal-ms) var(--reveal-ease);
         transform: translate(-50%, -50%) scale(80);
-      }
+      } */
       
       /* Accessibility */
       @media (prefers-reduced-motion: reduce){
