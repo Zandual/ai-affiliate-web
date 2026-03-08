@@ -465,7 +465,7 @@
         );
       }
 
-      /* html.reveal-start body::after,
+      html.reveal-start body::after,
       html.reveal-anim body::after{
         content: "";
         position: fixed;
@@ -473,20 +473,20 @@
         top: var(--wipe-y);
         width: 16px;
         height: 16px;
-        border: 2px solid red;
+        border: 0.5px black;
         box-sizing: border-box;
         pointer-events: none;
         z-index: 99999;
 
         /* center the square exactly on the origin point */
-        /* transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) scale(1);
         transform-origin: center center;
-      }  */
+      }  
       
-      /* html.reveal-anim body::after{ */
-       /* transition: transform var(--reveal-ms) var(--reveal-ease);
+      html.reveal-anim body::after{ 
+        transition: transform var(--reveal-ms) var(--reveal-ease);
         transform: translate(-50%, -50%) scale(80);
-      } */
+      } 
       
       /* Accessibility */
       @media (prefers-reduced-motion: reduce){
