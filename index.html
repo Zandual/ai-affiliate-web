@@ -7,6 +7,7 @@
     <title>AI Affiliate</title>
 
     <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/stack-finder/styles.css" />
 
     <style>
       /* =========================================================
@@ -523,6 +524,11 @@
       </section>
     </main>
 
+    <!-- Isolated Stack Finder; the generated app mounts separately below. -->
+    <section id="stack-finder" aria-label="AI Stack Finder">
+      <p>Loading the AI Stack Finder…</p>
+    </section>
+
     <!-- Expo/React Native Web mounts here -->
     <div id="root"></div>
     
@@ -530,6 +536,7 @@
 
     <!-- Load Expo bundle -->
     <script src="/AppEntry.js" defer></script>
+    <script type="module" src="/stack-finder/ui.js"></script>
 
     <!-- Spark animation -->
     <script src="/spark.js" defer></script>
