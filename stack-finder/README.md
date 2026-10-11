@@ -1,5 +1,9 @@
 # Stack Finder preview and UI verification
 
+The final M7.4 [five-gate verification record](VERIFICATION.md) includes the
+accessibility corrections, exact test counts, integrated browser evidence,
+reproduction steps, changed-file scope, and known limitations.
+
 M7.2 mounts the five-question Finder alongside the existing site. The UI uses the
 M7.1 engine for decisions. The scenarios below are reproducible browser checks;
 the M7.2 verification record is preserved below. M7.3 reproduction instructions

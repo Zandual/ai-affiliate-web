@@ -84,7 +84,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         body::before { animation: none; }
-        #spark-hint { display: none; }
+        #spark-hint, #spark-canvas { display: none; }
       }
 
       /* =========================================================
@@ -180,6 +180,13 @@
       }
       
       #home-wow * { font-family: inherit; }
+
+      /* Reverse tabbing out of the Finder must not hide the focused host control. */
+      #home-wow:focus-within { z-index: 10002; }
+      #home-wow :focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 4px;
+      }
       
       /* Left column: HOME + subtitle */
       #home-wow article {
@@ -217,6 +224,11 @@
         display: inline-block;
         white-space: break-spaces;
         animation: breath var(--speed) ease calc(var(--index) * 100ms) infinite alternate;
+      }
+
+      /* Also respect preference changes after the title spans have been created. */
+      @media (prefers-reduced-motion: reduce) {
+        #home-wow [letter-animation="breath"] > span { animation: none; }
       }
 
       @keyframes breath {
@@ -519,7 +531,7 @@
             <span>Party</span>
             <span>Chill</span>
           </div>
-          <input id="breathSpeed" min="100" max="2400" type="range" value="1200" />
+          <input id="breathSpeed" aria-label="Home animation duration (milliseconds)" min="100" max="2400" type="range" value="1200" />
         </div>
       </section>
     </main>
