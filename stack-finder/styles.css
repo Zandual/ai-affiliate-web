@@ -532,6 +532,40 @@
   line-height: 1.7;
 }
 
+#stack-finder .sf-explain {
+  margin-top: 18px;
+  border-top: 1px solid var(--sf-line);
+  font-size: 13px;
+}
+
+#stack-finder .sf-explain summary {
+  min-height: 44px;
+  padding: 12px 0;
+  color: var(--sf-green);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#stack-finder .sf-explain dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--sf-line);
+}
+
+#stack-finder .sf-explain dt {
+  color: var(--sf-muted);
+}
+
+#stack-finder .sf-explain dd {
+  font-variant-numeric: tabular-nums;
+}
+
+#stack-finder .sf-explain-note {
+  margin-top: 16px;
+}
+
 @media (max-width: 640px) {
   #stack-finder {
     width: calc(100% - 24px);

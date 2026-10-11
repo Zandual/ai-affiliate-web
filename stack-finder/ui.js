@@ -1,4 +1,5 @@
 import { recommend } from './core.mjs';
+import { createAnalytics } from './analytics.mjs';
 
 // Presentation labels only. All coverage, ranking, and classification come from core.mjs.
 const JOBS = [
@@ -66,10 +67,18 @@ function element(tag, attributes = {}, ...children) {
 }
 
 export function mountStackFinder(root) {
+  const view = root.ownerDocument.defaultView;
+  const explainMode = new URLSearchParams(view.location.search).get('sf_explain') === '1';
+  const analytics = createAnalytics({
+    emit: detail => root.dispatchEvent(new view.CustomEvent('stack-finder:analytics', { detail, bubbles: true })),
+  });
+  let stopViewing = () => {};
   let step = -1;
   let answers;
   let result = null;
   const reset = () => {
+    stopViewing();
+    analytics.reset();
     answers = { primaryJob: null, existingTools: new Set(), nothing: false, costs: {}, frequency: null, budget: null, exactBudget: '', biggestPain: null };
     result = null;
     step = -1;
@@ -83,6 +92,8 @@ export function mountStackFinder(root) {
   }
 
   function shell(content) {
+    stopViewing();
+    stopViewing = () => {};
     root.replaceChildren(element('div', { class: 'sf-shell' },
       element('header', {}, element('span', { class: 'sf-brand' }, 'AI Stack Finder'),
         element('span', { class: 'sf-meta' }, 'Fewer tools. More purpose.')),
@@ -113,7 +124,7 @@ export function mountStackFinder(root) {
           ['02 · Keep what works', 'Review what you already use before adding more.'],
           ['03 · Respect your budget', 'A free tier—or no new purchase—may be the right next step.']]
           .map(([title, description]) => element('div', {}, element('strong', {}, title), element('p', {}, description)))),
-      button('Find my stack', () => { step = 0; render(); }),
+      button('Find my stack', () => { analytics.start(); step = 0; render(); }),
       element('p', { class: 'sf-help' }, 'About 60–90 seconds · No account needed')));
   }
 
@@ -240,6 +251,8 @@ export function mountStackFinder(root) {
           return;
         }
       }
+      analytics.questionAnswered(step + 1);
+      if (step === 4) analytics.completed(result.state);
       step += 1;
       render();
     });
@@ -254,12 +267,68 @@ export function mountStackFinder(root) {
       ? tool.monthlyCost === null ? 'Monthly cost unknown' : `${money(tool.monthlyCost)} / month · entered by you`
       : tool.toolId === 'general-assistant' ? 'Start with a free tier'
         : `${money(tool.monthlyPrice)} / month · estimated paid-plan cost${tool.status === 'TRY_FREE' ? '; start free' : ''}`;
-    // No outbound CTA is enabled in M7.2. No provider-issued approved URL exists.
+    // No approved provider-issued URL is configured. This remains a decision
+    // card, not an outbound action; rendering it must never emit a click event.
     return element('article', { class: 'sf-tool-card', 'data-tool-id': tool.toolId },
       element('header', {}, element('h3', { class: 'sf-tool-name' }, tool.name ?? toolNames[tool.toolId] ?? tool.toolId),
         element('span', { class: 'sf-status', 'data-status': tool.status }, tool.status.replaceAll('_', ' '))),
       element('p', { class: 'sf-price' }, price),
-      tool.reasons.map(reason => element('p', { class: 'sf-reason' }, reason)));
+      tool.reasons.map(reason => element('p', { class: 'sf-reason' }, reason)),
+      explainMode && !existing ? explanation(tool) : null);
+  }
+
+  function explanation(tool) {
+    const resultState = result.state;
+    const fields = element('dl');
+    for (const [label, value] of [
+      ['Job fit', tool.scoreBreakdown.jobFit],
+      ['Frequency fit', tool.scoreBreakdown.frequencyFit],
+      ['Budget fit', tool.scoreBreakdown.budgetFit],
+      ['Unique capability', tool.scoreBreakdown.uniqueCapability],
+      ['Overlap penalty', tool.scoreBreakdown.overlapPenalty],
+      ['Problem modifier', tool.scoreBreakdown.problemModifier],
+      ['Score total', tool.score],
+      ['Hard gates triggered', tool.hardGates.length ? tool.hardGates.join(', ') : 'None'],
+      ['Final classification', tool.status],
+    ]) fields.append(element('div', {}, element('dt', {}, label), element('dd', {}, String(value))));
+    const details = element('details', { class: 'sf-explain' },
+      element('summary', {}, `Explain recommendation: ${tool.name}`), fields);
+    // toggle represents an opened panel, rather than a click on an already-open one.
+    details.addEventListener('toggle', () => {
+      if (details.open && details.isConnected) analytics.explanationOpened(tool, resultState);
+    });
+    return details;
+  }
+
+  function observeRecommendations() {
+    if (!view.IntersectionObserver) return;
+    const displayedResult = result;
+    const visibleCards = new Set();
+    const cards = new Map([...root.querySelectorAll('[data-recommendations] .sf-tool-card')]
+      .map((card, index) => [card, displayedResult.recommendations[index]]));
+    let active = true;
+    const emitVisible = () => {
+      if (!active || result !== displayedResult || root.ownerDocument.visibilityState !== 'visible') return;
+      for (const card of visibleCards) {
+        if (card.isConnected) analytics.recommendationViewed(cards.get(card), displayedResult.state);
+      }
+    };
+    const observer = new view.IntersectionObserver(entries => {
+      if (!active) return;
+      for (const entry of entries) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.25) visibleCards.add(entry.target);
+        else visibleCards.delete(entry.target);
+      }
+      emitVisible();
+    }, { threshold: 0.25 });
+    for (const card of cards.keys()) observer.observe(card);
+    root.ownerDocument.addEventListener('visibilitychange', emitVisible);
+    stopViewing = () => {
+      active = false;
+      observer.disconnect();
+      visibleCards.clear();
+      root.ownerDocument.removeEventListener('visibilitychange', emitVisible);
+    };
   }
 
   function renderResults() {
@@ -280,6 +349,8 @@ export function mountStackFinder(root) {
       element('div', { class: 'sf-card-grid', 'data-audit': '' }, result.audit.map(tool => toolCard(tool, true))));
     content.append(element('h3', { class: 'sf-section-title' }, 'New-tool decisions'),
       element('div', { class: 'sf-card-grid', 'data-recommendations': '' }, result.recommendations.map(tool => toolCard(tool))));
+    if (explainMode) content.append(element('p', { class: 'sf-note sf-explain-note' },
+      'Development explain mode: open a recommendation to inspect the values and hard gates returned by the engine.'));
     const summary = element('dl');
     for (const [name, value] of [
       ['Primary job', labelFor(JOBS, answers.primaryJob)],
@@ -292,6 +363,7 @@ export function mountStackFinder(root) {
       element('div', { class: 'sf-actions' }, button('Back to answers', () => { result = null; step = 4; render(); }, true),
         button('Start over', () => { reset(); render(); })));
     shell(content);
+    observeRecommendations();
   }
 
   render(false);
