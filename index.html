@@ -510,6 +510,13 @@
           clip-path: inset(0 0 0 0) !important;
         }
       }
+
+      /* Validation has its own presentation; legacy markup/code remains available. */
+      html[data-finder-validation] body { height: auto; min-height: 100vh; display: flow-root; }
+      html[data-finder-validation] #home-wow,
+      html[data-finder-validation] #spark-canvas,
+      html[data-finder-validation] #page-wipe { display: none; }
+      html[data-finder-validation] #stack-finder { margin: 24px auto; scroll-margin-top: 24px; }
     </style>
   </head>
 
@@ -537,23 +544,20 @@
       </section>
     </main>
 
-    <!-- Isolated Stack Finder; the generated app mounts separately below. -->
+    <!-- Finder mounts independently in both page modes. -->
     <section id="stack-finder" aria-label="AI Stack Finder">
       <p>Loading the AI Stack Finder…</p>
     </section>
 
-    <!-- Expo/React Native Web mounts here -->
-    <div id="root"></div>
+    <!-- Inert until page-mode.mjs explicitly selects the legacy experience. -->
+    <template id="legacy-app-root"><div id="root"></div></template>
     
     <div id="page-wipe" aria-hidden="true"></div>  
 
-    <!-- Load Expo bundle -->
-    <script src="/AppEntry.js" defer></script>
+    <!-- Select page composition before the independent Finder modules. -->
+    <script type="module" src="/stack-finder/page-mode.mjs"></script>
     <script type="module" src="/stack-finder/posthog.mjs"></script>
     <script type="module" src="/stack-finder/ui.js"></script>
-
-    <!-- Spark animation -->
-    <script src="/spark.js" defer></script>
 
     <script>
       /**

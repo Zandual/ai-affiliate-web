@@ -4,6 +4,80 @@ The final M7.4 [five-gate verification record](VERIFICATION.md) includes the
 accessibility corrections, exact test counts, integrated browser evidence,
 reproduction steps, changed-file scope, and known limitations.
 
+## Validation page isolation
+
+Open the root page with the exact `#stack-finder` fragment to select validation
+mode, for example `http://127.0.0.1:4173/?sf_explain=1#stack-finder`. Query
+parameters, explain mode, and UTM attribution retain their existing behavior.
+
+Previously, `index.html` created both `#stack-finder` and the legacy `#root` and
+unconditionally loaded both entry points. `ui.js` calls `mountStackFinder()` on
+the Finder section. Separately, `AppEntry.js` registers the Expo app and calls
+`runApplication('main', { rootTag })` on `#root`. Its Home screen fetches
+`/api/products`, then renders the product cards; its navigation also exposes the
+Dashboard. Both applications were therefore live in one document. The legacy
+root's `min-height: 100vh` would leave a blank area even if only the bundle were
+skipped.
+
+`page-mode.mjs` now leaves the legacy root inside an inert HTML template in
+validation mode and never loads `AppEntry.js` or `spark.js`. There is no live
+legacy root and no legacy product request. Validation-scoped styles hide the
+preserved Home demo header/canvas/wipe and remove its reserved Finder spacing.
+The document ends naturally after Finder, with the shared background retained.
+No generic card selectors or generated bundle edits are used.
+
+Legacy work is preserved: both generated AppEntry bundles, their Home/product
+card/Dashboard implementations, `spark.js`, and `functions/api/[[path]].js` are
+unchanged. Product data is supplied by the existing backend through that API;
+the named deployed products are not a separate seed file in this repository.
+Neither backend records nor API behavior were changed or deleted.
+
+To intentionally render the legacy experience, open `/` without `#stack-finder`
+(for example `http://127.0.0.1:4173/`). The template becomes the original live
+`#root`, then the original bundle and spark script load in order. Crossing
+between validation and legacy mode through a fragment change reloads the page,
+so an already-running Expo app cannot survive in validation mode. This clears
+unsaved Finder answers, as an ordinary reload does. Finder's own Back and
+restart buttons do not change the fragment or reload.
+
+### Isolation verification — October 15, 2026
+
+Based on `e11ca8c5bf22a95fc2817ae80e9bdfbac6dd5b55`:
+
+| Exact command | Passed | Failed | Skipped |
+|---|---:|---:|---:|
+| `node --test stack-finder/tests/stack-finder.test.mjs` | 60 | 0 | 0 |
+| `node --test stack-finder/tests/analytics.test.mjs` | 19 | 0 | 0 |
+| `node --test stack-finder/tests/posthog.test.mjs` | 22 | 0 | 0 |
+| `node --test stack-finder/tests/page-mode.test.mjs` | 6 | 0 | 0 |
+
+All **36 frozen scenarios** and **6 trust invariants** passed. The focused guard
+checks inert validation mounting, retained legacy mounting and script order,
+mode-change cleanup/reload, and the HTML entry-point wiring without relying on
+product copy or styling.
+
+Chrome **155.0.8059.39** completed recommendation, BUY NOTHING, and CATALOG GAP
+journeys at **1280px, 390px, and 320px**. All nine journeys passed intro, five
+questions, Back, results, Back to answers, explain mode, and Start over. Across
+93 checkpoints, no legacy root ever mounted, no legacy product/Dashboard content
+appeared, and no AppEntry, spark, or `/api/products` request occurred. No
+horizontal overflow, replacement blank area, or uncaught error was found.
+Result/explanation cards and the footer were visually inspected.
+
+The unchanged analytics architecture dispatched all five requested lifecycle,
+view, and explanation event types; **93 real SDK-generated capture requests**
+across the nine journeys were intercepted and decoded to verify those types
+also reached the transport. No PostHog configuration, event contract, or token
+was changed. A separate normal-mode journey completed with PostHog blocked and
+no debug panels. Legacy → validation → legacy navigation also passed: an
+isolated local API fixture rendered both named product cards and Dashboard
+outside validation, while validation made zero product requests. The fixture
+changed no backend data and was not added to production source.
+
+This verifies local Chrome behavior, not a new Cloudflare deployment or PostHog
+dashboard receipt. Historical milestone records below retain their original
+results, including the legacy API activity observed before page isolation.
+
 The bounded PostHog bridge described below is a later addition to the verified
 M7 baseline. The M7.3 local analytics contract remains unchanged; its historical
 verification record later in this guide predates network transport.
@@ -204,9 +278,9 @@ files with a JavaScript MIME type. The command above sets this explicitly becaus
 Windows can otherwise serve them as `text/plain`, which browsers block as modules.
 Stop the server with Ctrl+C.
 
-The existing Expo app may request `/api/products` and receive a 404 in this static
-preview because its legacy API is unavailable. The Finder runs independently of
-that endpoint.
+Outside `#stack-finder` validation mode, the existing Expo app may request
+`/api/products` and receive a 404 in this static preview because its legacy API
+is unavailable. Validation mode does not start that app or request the endpoint.
 
 ## Reproduce result states
 
