@@ -4,6 +4,185 @@ The final M7.4 [five-gate verification record](VERIFICATION.md) includes the
 accessibility corrections, exact test counts, integrated browser evidence,
 reproduction steps, changed-file scope, and known limitations.
 
+The bounded PostHog bridge described below is a later addition to the verified
+M7 baseline. The M7.3 local analytics contract remains unchanged; its historical
+verification record later in this guide predates network transport.
+
+## Bounded PostHog validation transport
+
+`index.html` loads `posthog.mjs` independently before `ui.js`. The bridge listens
+on the Finder mount for the existing bubbling `stack-finder:analytics` event.
+It has no input to recommendation decisions and imports only the event contract
+from `analytics.mjs`. Engine, catalog, pricing, affiliate eligibility, UI
+semantics, and frozen expectations are unchanged.
+
+The bridge asynchronously loads pinned PostHog JS **1.380.0** from the official
+US asset host. It creates the named `stackFinderValidation` instance with the
+existing **public browser project token** for AI Stack Finder Validation
+(project 661807), sending to `https://us.i.posthog.com`. No Personal API Key or
+build dependency is used. An existing host PostHog instance is left alone; the
+bridge becomes a no-op instead of borrowing or reconfiguring it.
+
+### Allowed data and collection settings
+
+Each incoming envelope is validated and copied into a fresh object by explicit
+property reads. Unknown names, invalid ordinals/categories, and throwing required
+getters are rejected. Unapproved/private fields are never read or enumerated.
+Only these events and event-specific properties are forwarded:
+
+| Event | Additional properties |
+|---|---|
+| `finder_started` | none |
+| `question_answered` | `question` (1–5) |
+| `finder_completed` | `state` (an existing engine state) |
+| `recommendation_viewed` | `state`, `toolId`, `classification` |
+| `recommendation_explanation_opened` | `state`, `toolId`, `classification` |
+| `outbound_affiliate_click` | `state`, `toolId`, `classification` |
+
+Each record also carries `version`, page-local `runId`, and `sequence`. Tool and
+classification values use the existing analytics allowlists; this does not send
+the user's selected existing tools. Approved attribution is read once per page:
+
+| Parameter | Exact accepted values |
+|---|---|
+| `utm_source` | `manual`, `facebook`, `instagram`, `threads`, `youtube` |
+| `utm_medium` | `qa`, `social`, `video` |
+| `utm_campaign` | `posthog_smoke`, `validation_30d` |
+
+Unknown values, repeated parameters, and all other query parameters are omitted.
+No full URL/query string, referrer, names, emails, phone numbers, raw answers,
+existing-tool selections, entered costs, exact budgets, free text, scores,
+referral URLs, or affiliate economics are forwarded.
+
+PostHog normally adds automatic metadata. A second, final `before_send` boundary
+rebuilds the entire event and properties, discarding that enrichment, including
+top-level `$set` / `$set_once`. It adds only the required public project token,
+a random **page-lifetime anonymous UUID** as `distinct_id`, and
+`$process_person_profile: false`. This UUID changes on reload and is never linked
+to an account or persisted. `identify()` is never called.
+
+Autocapture, pageview/pageleave, recording/replay, heatmaps, surveys, feature-flag
+requests, external dependency loading, performance capture, exception capture,
+dead/rage clicks, console recording, referrer/campaign auto-capture, and IP
+enrichment are disabled. `person_profiles` stays `identified_only`; persistence
+is memory-only and disabled. `index.html` sets `no-referrer` to suppress the HTTP
+Referer header as well as filtering referrer properties. The loader also sets
+`referrerPolicy: 'no-referrer'`. No PostHog cookies, localStorage, or sessionStorage
+entries were present in the verified browser journeys.
+
+### Failure isolation and interpretation
+
+The listener registers before SDK loading. Up to 100 already-sanitized records
+wait in memory and flush in order when the SDK becomes ready. Loading times out
+after eight seconds. Missing/blocked/failed initialization drops the queue;
+synchronous capture errors and rejected promises are contained. Batching is
+disabled. Duplicate initialization reuses one listener, and stopping is
+idempotent. Neither SDK availability nor delivery results feed back into Finder.
+
+**outbound click != signup != conversion != approved commission != revenue != payout**
+
+The bridge forwards only the existing client action. It cannot create any of
+those provider facts. Affiliate links remain disabled because there are no
+approved provider-issued URLs in the production catalog. No link was fabricated
+or activated for this transport implementation.
+
+### Smoke-test procedure
+
+1. Start the local server using the command under **Run locally** below. Open
+   `http://127.0.0.1:4173/?utm_source=manual&utm_medium=qa&utm_campaign=posthog_smoke#stack-finder`
+   in ordinary/headed Chrome. The vendor's default bot filter suppresses
+   HeadlessChrome; do not disable that filter in production to make a test pass.
+2. Open DevTools Network before starting. Complete Video / podcast → Nothing →
+   Daily → exact $75 → Time. Expect `RECOMMENDATIONS` with Descript ADD. The first
+   seven capture requests should be start, five question events, then completion
+   with sequence 1–7. Views follow only when cards become visible.
+3. Inspect the decompressed `/e/` request body (the SDK sends gzip). It must
+   contain only the fields documented above. Its HTTP Referer header must be
+   absent. Adding arbitrary query parameters must not add payload properties.
+   Tests can intercept collector requests and return `{"status":1}` to avoid
+   creating test data in PostHog. Interception proves the outgoing request,
+   not server receipt or dashboard ingestion.
+4. Add `&sf_explain=1` before the fragment to enable explain mode. Opening a
+   recommendation panel emits one explanation event; leaving it closed does not.
+   Back to answers and resubmission preserve the result without another
+   completion. Start over clears answers and starts a new local run.
+5. Block the SDK asset or ingestion host in DevTools and reload. Complete the
+   same journey, Back, and restart. Finder must work with the same results.
+   Check 390px and 320px widths for overflow, including open explain panels.
+
+An example sanitized completion body is below; transport values are placeholders:
+
+```json
+{
+  "event": "finder_completed",
+  "properties": {
+    "version": 1, "runId": 1, "sequence": 7,
+    "state": "RECOMMENDATIONS",
+    "utm_source": "manual", "utm_medium": "qa", "utm_campaign": "posthog_smoke",
+    "token": "<public project token>",
+    "distinct_id": "<random page-lifetime UUID>",
+    "$process_person_profile": false
+  }
+}
+```
+
+### Verification — October 15, 2026
+
+Based on `30eddecc97ee1e08aaf37c3d8437e723d4d27541`, with no frozen files changed:
+
+| Exact command | Passed | Failed | Skipped |
+|---|---:|---:|---:|
+| `node --test stack-finder/tests/stack-finder.test.mjs` | 60 | 0 | 0 |
+| `node --test stack-finder/tests/analytics.test.mjs` | 19 | 0 | 0 |
+| `node --test stack-finder/tests/posthog.test.mjs` | 22 | 0 | 0 |
+
+The regression total includes **36/36 frozen scenarios** and **6/6 trust
+invariants**. New tests cover all six forwarded events, forbidden provider-fact
+events, strict property reads/getters, UTM filtering, SDK metadata stripping,
+bounded queueing, absent/throwing/rejected transport, timeout, repeated setup and
+cleanup, and identical engine output with transport available or unavailable.
+
+Headed Chrome **155.0.8059.39** completed eight full journeys: enabled SDK,
+blocked SDK, throwing capture, rejected capture, blocked ingestion, disabled
+bridge, unknown UTM values, and delayed SDK. All passed intro, five questions,
+result, Back to answers, and restart. Results matched between modes. Desktop
+1280px and mobile 390px/320px had no horizontal overflow or uncaught errors.
+Explain mode opened and emitted only after opening. All production results had
+zero outbound anchors. Six SDK-enabled page loads used six distinct anonymous
+IDs, with empty cookies/localStorage/sessionStorage.
+
+The final eight-journey probe inspected **43 actual SDK-generated outgoing
+requests**, including requests aborted in the network-failure case. It decoded
+the gzip bodies and checked the exact property allowlist and lifecycle order.
+No flags, replay, surveys, or other product requests occurred. A separate journey
+entered ChatGPT cost `$19.43` and exact budget `$75.13`: all **11** outgoing
+requests omitted those values, selected tools, raw answers, extra query values,
+URLs/referrers, scores, and affiliate economics. Direct SDK attempts to capture
+seven automatic/provider-fact names produced **zero additional requests**.
+Open explain cards also fit 390px and 320px. Collector requests were intercepted;
+the real pinned SDK was loaded from its official host throughout.
+
+The initial no-request probe used HeadlessChrome, which the SDK's default bot
+filter blocks. Repeating with headed Chrome produced the expected request
+without changing production bot filtering, batching, or privacy settings. The
+only discovered bridge defect was repeat-stop cleanup deleting a replacement
+listener's registry entry; idempotent cleanup fixed it and its regression passes.
+
+Limitations: this verifies Chrome and outgoing requests, not PostHog dashboard
+receipt, other browsers, or delivery guarantees. Ad blockers, unload, failed
+loads, and the bounded queue can lose events. No cross-page identity or retention
+measurement is available. HTTPS/localhost with `crypto.randomUUID` is required;
+unsupported environments safely omit transport. HTTP still necessarily exposes
+network IP and ordinary browser headers to the service; these are not included
+in event properties and SDK IP enrichment is disabled. The existing unrelated
+static-preview `/api/products` 404 remains. Node emits its MockTimers experimental
+warning for the timeout unit test; the test passes. This work does not deploy the
+site, activate affiliate links, or start participant validation.
+
+Configuration references: [PostHog JS configuration](https://posthog.com/docs/libraries/js/config),
+[before_send](https://posthog.com/docs/libraries/js/usage#amending-or-sampling-events),
+[client bot filtering](https://posthog.com/docs/web-analytics/troubleshooting#do-stats-include-bots-and-crawlers).
+
 M7.2 mounts the five-question Finder alongside the existing site. The UI uses the
 M7.1 engine for decisions. The scenarios below are reproducible browser checks;
 the M7.2 verification record is preserved below. M7.3 reproduction instructions
