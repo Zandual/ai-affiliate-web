@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="referrer" content="no-referrer" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <base href="/" />
     <title>AI Affiliate</title>
 
     <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/stack-finder/styles.css" />
 
     <style>
       /* =========================================================
@@ -83,7 +85,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         body::before { animation: none; }
-        #spark-hint { display: none; }
+        #spark-hint, #spark-canvas { display: none; }
       }
 
       /* =========================================================
@@ -179,6 +181,13 @@
       }
       
       #home-wow * { font-family: inherit; }
+
+      /* Reverse tabbing out of the Finder must not hide the focused host control. */
+      #home-wow:focus-within { z-index: 10002; }
+      #home-wow :focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 4px;
+      }
       
       /* Left column: HOME + subtitle */
       #home-wow article {
@@ -216,6 +225,11 @@
         display: inline-block;
         white-space: break-spaces;
         animation: breath var(--speed) ease calc(var(--index) * 100ms) infinite alternate;
+      }
+
+      /* Also respect preference changes after the title spans have been created. */
+      @media (prefers-reduced-motion: reduce) {
+        #home-wow [letter-animation="breath"] > span { animation: none; }
       }
 
       @keyframes breath {
@@ -496,11 +510,27 @@
           clip-path: inset(0 0 0 0) !important;
         }
       }
+
+      /* Validation has its own presentation; legacy markup/code remains available. */
+      html[data-finder-validation] body { height: auto; min-height: 100vh; display: flow-root; }
+      html[data-finder-validation] #home-wow,
+      html[data-finder-validation] #spark-canvas,
+      html[data-finder-validation] #page-wipe { display: none; }
+      html[data-finder-validation] #stack-finder { margin: 24px auto; scroll-margin-top: 24px; }
+      /* Keep both experiences reachable above the preserved legacy overlays. */
+      #experience-nav { position: relative; z-index: 100003; display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 16px; background: #111827; color: #fff; font: 16px/1.5 system-ui, sans-serif; }
+      #experience-nav a { color: #fff; text-decoration: underline; text-underline-offset: 3px; padding: 6px 2px; }
+      #experience-nav a:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
     </style>
   </head>
 
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <nav id="experience-nav" aria-label="Choose site view">
+      <a href="#stack-finder">AI Stack Finder</a>
+      <a href="#legacy-view">Older site view</a>
+    </nav>
 
     <!-- Spark canvas + hint -->
     <canvas id="spark-canvas" aria-hidden="true"></canvas>
@@ -518,21 +548,25 @@
             <span>Party</span>
             <span>Chill</span>
           </div>
-          <input id="breathSpeed" min="100" max="2400" type="range" value="1200" />
+          <input id="breathSpeed" aria-label="Home animation duration (milliseconds)" min="100" max="2400" type="range" value="1200" />
         </div>
       </section>
     </main>
 
-    <!-- Expo/React Native Web mounts here -->
-    <div id="root"></div>
+    <!-- Finder mounts independently in both page modes. -->
+    <section id="stack-finder" aria-label="AI Stack Finder">
+      <p>Loading the AI Stack Finder…</p>
+    </section>
+
+    <!-- Inert until page-mode.mjs explicitly selects the legacy experience. -->
+    <template id="legacy-app-root"><div id="root"></div></template>
     
     <div id="page-wipe" aria-hidden="true"></div>  
 
-    <!-- Load Expo bundle -->
-    <script src="/AppEntry.js" defer></script>
-
-    <!-- Spark animation -->
-    <script src="/spark.js" defer></script>
+    <!-- Select page composition before the independent Finder modules. -->
+    <script type="module" src="/stack-finder/page-mode.mjs"></script>
+    <script type="module" src="/stack-finder/posthog.mjs"></script>
+    <script type="module" src="/stack-finder/ui.js"></script>
 
     <script>
       /**
@@ -589,3 +623,4 @@
     </script>
   </body>
 </html>
+
