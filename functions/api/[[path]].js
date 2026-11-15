@@ -24,7 +24,7 @@ export async function onRequest({ request }) {
   try {
     const upstream = await fetch('https://api.zanduelsdomain.app/api/products', {
       method: 'GET', headers: { Accept: 'application/json' },
-      credentials: 'omit', redirect: 'error',
+      redirect: 'manual',
     });
     if (!upstream.ok || !upstream.headers.get('content-type')?.includes('application/json')) {
       return reply({ error: 'Catalog unavailable' }, 502);
