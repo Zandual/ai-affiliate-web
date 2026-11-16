@@ -553,6 +553,8 @@
 
     <section id="accessibility-tools" aria-label="Display preferences" hidden>
       <button id="accessibility-toggle" type="button" aria-expanded="false" aria-controls="accessibility-panel">Accessibility</button>
+      <button id="read-aloud" type="button" aria-describedby="read-aloud-status" disabled>Read aloud</button>
+      <p id="read-aloud-status">Read aloud unavailable until this page finishes loading.</p>
       <div id="accessibility-panel" hidden>
         <h2>Display preferences</h2>
         <p>Adjust this page without changing your browser or device settings. Preferences last until you reload. Browser zoom and device accessibility settings still work.</p>
@@ -609,6 +611,7 @@
     <script type="module" src="/stack-finder/posthog.mjs"></script>
     <script type="module" src="/stack-finder/ui.js"></script>
 <script type="module" src="/stack-finder/accessibility.mjs"></script>
+<script type="module" src="/stack-finder/read-aloud.mjs"></script>
 
     <script>
       /**
@@ -665,4 +668,5 @@
     </script>
   </body>
 </html>
+
 
