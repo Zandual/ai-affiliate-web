@@ -18,7 +18,7 @@
   border-radius: 24px;
   background: var(--sf-paper);
   color: var(--sf-ink);
-  font: 400 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 400 1rem/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
   text-align: left;
   overflow-wrap: anywhere;
   color-scheme: light;
@@ -70,7 +70,7 @@
 
 #stack-finder .sf-brand {
   color: var(--sf-green);
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 750;
   letter-spacing: -0.04em;
 }
@@ -78,7 +78,7 @@
 #stack-finder .sf-meta,
 #stack-finder .sf-eyebrow {
   color: var(--sf-muted);
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -91,7 +91,7 @@
 #stack-finder .sf-intro h2 {
   max-width: 780px;
   margin: 14px 0 20px;
-  font-size: clamp(32px, 5vw, 58px);
+  font-size: clamp(2rem, 1rem + 4vw, 3.625rem);
   font-weight: 650;
   line-height: 1.1;
   letter-spacing: -0.055em;
@@ -101,7 +101,7 @@
 #stack-finder .sf-lead {
   max-width: 740px;
   color: var(--sf-muted);
-  font-size: clamp(16px, 2vw, 19px);
+  font-size: clamp(1rem, 0.875rem + 0.5vw, 1.1875rem);
   line-height: 1.7;
 }
 
@@ -122,14 +122,14 @@
 #stack-finder .sf-principles strong {
   display: block;
   margin-bottom: 6px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 650;
 }
 
 #stack-finder .sf-principles :is(p, small) {
   display: block;
   color: var(--sf-muted);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.6;
 }
 
@@ -138,7 +138,7 @@
   gap: 12px;
   margin: 28px 0 30px;
   color: var(--sf-muted);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -181,7 +181,7 @@
   display: block;
   max-width: 100%;
   padding: 0;
-  font-size: clamp(25px, 3.5vw, 36px);
+  font-size: clamp(1.5625rem, 1rem + 2.5vw, 2.25rem);
   font-weight: 650;
   line-height: 1.25;
   letter-spacing: -0.035em;
@@ -239,7 +239,7 @@
 
 #stack-finder .sf-option-copy strong {
   display: block;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 650;
 }
 
@@ -247,7 +247,7 @@
   display: block;
   margin-top: 3px;
   color: var(--sf-muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
@@ -274,7 +274,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--sf-muted);
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -298,7 +298,7 @@
 #stack-finder .sf-error {
   margin-top: 16px;
   color: #9b2420;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -326,7 +326,7 @@
   border-radius: 8px;
   background: var(--sf-green);
   color: var(--sf-white);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 650;
   line-height: 1.5;
   text-align: center;
@@ -363,7 +363,7 @@
   display: inline-block;
   margin-bottom: 14px;
   color: var(--sf-green);
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 750;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -390,14 +390,14 @@
 
 #stack-finder .sf-spend dt {
   color: var(--sf-muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 #stack-finder .sf-spend dd {
   margin-top: 8px;
   color: var(--sf-ink);
-  font-size: clamp(24px, 3vw, 30px);
+  font-size: clamp(1.5rem, 1rem + 2vw, 1.875rem);
   font-weight: 650;
   line-height: 1.35;
   letter-spacing: -0.035em;
@@ -406,13 +406,13 @@
 #stack-finder .sf-note,
 #stack-finder .sf-disclosure {
   color: var(--sf-muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   line-height: 1.65;
 }
 
 #stack-finder .sf-section-title {
   margin: 32px 0 14px;
-  font-size: 19px;
+  font-size: 1.188rem;
   font-weight: 650;
   letter-spacing: -0.025em;
 }
@@ -444,7 +444,7 @@
 }
 
 #stack-finder .sf-tool-name {
-  font-size: 17px;
+  font-size: 1.062rem;
   font-weight: 650;
   line-height: 1.4;
 }
@@ -457,7 +457,7 @@
   border-radius: 5px;
   background: var(--sf-green-soft);
   color: var(--sf-green);
-  font-size: 11px;
+  font-size: 0.875rem;
   font-weight: 750;
   line-height: 1.5;
   letter-spacing: 0.04em;
@@ -478,7 +478,7 @@
 #stack-finder .sf-price {
   margin-top: 12px;
   color: var(--sf-muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
@@ -488,13 +488,13 @@
 
 #stack-finder .sf-purpose {
   margin-top: 14px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.6;
 }
 
 #stack-finder .sf-action {
   margin-top: 16px;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 
@@ -503,14 +503,14 @@
   padding-top: 12px;
   border-top: 1px solid var(--sf-line);
   color: var(--sf-muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   line-height: 1.65;
 }
 
 #stack-finder .sf-reason {
   margin-top: 12px;
   color: var(--sf-muted);
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 
@@ -518,7 +518,7 @@
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid var(--sf-line);
-  font-size: 12px;
+  font-size: 0.875rem;
 }
 
 #stack-finder .sf-answer-summary {
@@ -531,7 +531,7 @@
   min-height: 48px;
   padding: 14px 0;
   color: var(--sf-green);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 650;
   cursor: pointer;
 }
@@ -541,7 +541,7 @@
   grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr);
   gap: 8px 18px;
   padding: 4px 0 20px;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 #stack-finder .sf-answer-summary dt {
@@ -553,14 +553,14 @@
   padding-top: 20px;
   border-top: 1px solid var(--sf-line);
   color: var(--sf-muted);
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 
 #stack-finder .sf-explain {
   margin-top: 18px;
   border-top: 1px solid var(--sf-line);
-  font-size: 13px;
+  font-size: 0.875rem;
 }
 
 #stack-finder .sf-explain summary {
@@ -656,7 +656,7 @@
 
 /* Keep the privacy explanation keyboard-accessible and readable at narrow widths. */
 #stack-finder .sf-footer {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 #stack-finder .sf-footer p + p,
@@ -674,7 +674,7 @@
 }
 
 #stack-finder .sf-privacy summary:focus-visible {
-  outline: 3px solid #8be8d5;
+  outline: 3px solid #17684a;
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -691,7 +691,7 @@
 
 #stack-finder .sf-consent h3 {
   margin: 0 0 10px;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 #stack-finder .sf-consent-actions {
@@ -731,6 +731,24 @@
     display: none;
   }
   html[data-finder-validation] #stack-finder .sf-shell > header .sf-meta {
-    font-size: 11px; letter-spacing: 0.08em;
+    font-size: 0.875rem; letter-spacing: 0.08em;
   }
+}
+
+/* Respect browser/OS accessibility preferences without a separate settings panel. */
+#stack-finder .sf-button { white-space: normal; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  #stack-finder, #stack-finder *, #stack-finder *::before, #stack-finder *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (forced-colors: active) {
+  #stack-finder { border-color: CanvasText; }
+  #stack-finder :is(.sf-option, .sf-cost-input, .sf-button, .sf-tool-card) { border-color: ButtonText; }
+  #stack-finder .sf-option:has(input:checked) { border: 2px solid Highlight; }
+  #stack-finder :focus-visible, #stack-finder .sf-title:focus,
+  #stack-finder .sf-privacy summary:focus-visible { outline-color: Highlight; }
+  #stack-finder .sf-button:disabled { border-color: GrayText; color: GrayText; }
 }

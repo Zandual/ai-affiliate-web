@@ -9,6 +9,7 @@
 
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/stack-finder/styles.css" />
+<link rel="stylesheet" href="/stack-finder/accessibility.css" />
 
     <style>
       /* =========================================================
@@ -518,7 +519,7 @@
       html[data-finder-validation] #page-wipe { display: none; }
       html[data-finder-validation] #stack-finder { margin: 24px auto; scroll-margin-top: 24px; }
       /* Keep both experiences reachable above the preserved legacy overlays. */
-      #experience-nav { position: relative; z-index: 100003; display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 16px; background: #111827; color: #fff; font: 16px/1.5 system-ui, sans-serif; }
+      #experience-nav { position: relative; z-index: 100003; display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 12px 16px; background: #111827; color: #fff; font: 1rem/1.5 system-ui, sans-serif; }
       #experience-nav a { color: #fff; text-decoration: underline; text-underline-offset: 3px; padding: 6px 2px; }
       #experience-nav a:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
       /* Compact phone header in Finder mode; legacy and desktop remain unchanged. */
@@ -526,7 +527,7 @@
         html[data-finder-validation] #experience-nav {
           align-items: center; justify-content: space-between; gap: 4px 16px;
           padding: 8px 16px; background: #f6f6ef; color: #20392e;
-          border-bottom: 1px solid #d4ddd2; font-size: 14px;
+          border-bottom: 1px solid #d4ddd2; font-size: 0.875rem;
         }
         html[data-finder-validation] #experience-nav a {
           min-height: 44px; display: inline-flex; align-items: center;
@@ -550,6 +551,22 @@
       <a href="#stack-finder">AI Stack Finder</a>
     </nav>
 
+    <section id="accessibility-tools" aria-label="Display preferences" hidden>
+      <button id="accessibility-toggle" type="button" aria-expanded="false" aria-controls="accessibility-panel">Accessibility</button>
+      <div id="accessibility-panel" hidden>
+        <h2>Display preferences</h2>
+        <p>Adjust this page without changing your browser or device settings. Preferences last until you reload. Browser zoom and device accessibility settings still work.</p>
+        <label for="accessibility-text">Text size</label>
+        <select id="accessibility-text">
+          <option value="100">Browser default</option>
+          <option value="125">Larger (125%)</option>
+          <option value="150">Largest (150%)</option>
+        </select>
+        <label for="accessibility-contrast"><input id="accessibility-contrast" type="checkbox"> Higher contrast</label>
+        <button id="accessibility-reset" type="button">Reset display preferences</button>
+        <p id="accessibility-status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
     <!-- Spark canvas + hint -->
     <canvas id="spark-canvas" aria-hidden="true"></canvas>
 
@@ -585,6 +602,7 @@
     <script type="module" src="/stack-finder/page-mode.mjs"></script>
     <script type="module" src="/stack-finder/posthog.mjs"></script>
     <script type="module" src="/stack-finder/ui.js"></script>
+<script type="module" src="/stack-finder/accessibility.mjs"></script>
 
     <script>
       /**
