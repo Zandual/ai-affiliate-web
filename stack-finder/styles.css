@@ -721,3 +721,16 @@
 #stack-finder .sf-affiliate-disclosure { font-weight: 600; }
 #stack-finder .sf-affiliate-link { display: inline-flex; margin-top: 12px; text-decoration: none; white-space: normal; }
 #stack-finder .sf-external-notice, #stack-finder .sf-trademark { font-size: 0.875rem; line-height: 1.5; }
+
+/* Avoid repeating the mobile app-bar title, while retaining the tagline. */
+@media (max-width: 640px) {
+  html[data-finder-validation] #stack-finder .sf-shell > header {
+    gap: 4px; padding-bottom: 12px;
+  }
+  html[data-finder-validation] #stack-finder .sf-shell > header .sf-brand {
+    display: none;
+  }
+  html[data-finder-validation] #stack-finder .sf-shell > header .sf-meta {
+    font-size: 11px; letter-spacing: 0.08em;
+  }
+}
