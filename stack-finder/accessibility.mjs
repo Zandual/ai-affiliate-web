@@ -3,7 +3,7 @@ export function textScale(value) {
   return ['100', '125', '150'].includes(String(value)) ? String(value) : '100';
 }
 export function colorTheme(value) {
-  return ['default', 'contrast', 'light'].includes(value) ? value : 'default';
+  return ['default', 'contrast', 'dark'].includes(value) ? value : 'default';
 }
 export function setupAccessibility(doc = document) {
   const root = doc.documentElement;
@@ -23,7 +23,7 @@ export function setupAccessibility(doc = document) {
     root.setAttribute('data-display-theme', selectedTheme);
     root.toggleAttribute('data-higher-contrast', selectedTheme === 'contrast');
     status.textContent = (scale === '100' ? 'Browser default text size.' : 'Text size ' + scale + '%.') +
-      ' Theme: ' + ({default:'Default (warm)', contrast:'High contrast', light:'Light (white)'})[selectedTheme] + '.';
+      ' Theme: ' + ({default:'Default (warm)', contrast:'High contrast', dark:'Dark'})[selectedTheme] + '.';
   }
   function close() {
     panel.hidden = true;
