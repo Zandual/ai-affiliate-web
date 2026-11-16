@@ -32,3 +32,11 @@
   html[data-higher-contrast] body #experience-nav a { color:#000; }
   html[data-higher-contrast] body #experience-nav a:focus-visible { outline-color:#000; }
 }
+/* Named themes only; OS forced colors owns colors when active. */
+@media (forced-colors:none) {
+  html[data-display-theme="light"] #stack-finder { --sf-paper:#fff; --sf-ink:#20392e; --sf-muted:#59675e; --sf-line:#718178; }
+  html[data-display-theme="light"] #accessibility-tools { background:#fff; color:#20392e; }
+  html[data-display-theme="light"] body #experience-nav { background:#fff; color:#20392e; border-color:#718178; }
+  html[data-display-theme="light"] body #experience-nav a { color:#174b38; }
+  html[data-display-theme="light"] body #experience-nav a:focus-visible { outline-color:#17684a; }
+}
