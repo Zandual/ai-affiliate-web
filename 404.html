@@ -3,21 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Page not found | AI Stack Finder</title>
   <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>Temporarily unavailable | AI Stack Finder</title>
   <style>
-    body { margin: 0; padding: 2rem; background: #f6f6ef; color: #20392e; font: 1.125rem/1.6 system-ui, sans-serif; overflow-wrap: anywhere; }
-    main { max-width: 40rem; margin: 10vh auto; }
-    a { color: #174b38; text-underline-offset: .2em; }
-    a:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
-    @media (forced-colors: active) { body { background: Canvas; color: CanvasText; } a { color: LinkText; } }
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 1.25rem; background: #f6f6ef; color: #20392e; font: 1.125rem/1.65 system-ui, sans-serif; overflow-wrap: anywhere; }
+    main { max-width: 42rem; margin: 8vh auto; }
+    h1 { font-size: clamp(1.75rem, 6vw, 2.5rem); line-height: 1.2; }
+    .action { display: inline-block; padding: .7rem 1rem; border: 2px solid currentColor; border-radius: .5rem; color: #174b38; text-underline-offset: .2em; min-height: 44px; }
+    .action:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+    @media (prefers-color-scheme: dark) { body { background: #101916; color: #edf5ef; } .action { color: #9ae6b4; } }
+    @media (forced-colors: active) { body { background: Canvas; color: CanvasText; } .action { color: LinkText; border-color: LinkText; } }
   </style>
 </head>
 <body>
   <main>
-    <h1>Page not found</h1>
-    <p>This address may be an older link. You can still use AI Stack Finder.</p>
-    <p><a href="/#stack-finder">Open AI Stack Finder</a></p>
+    <p>AI Stack Finder</p>
+    <h1>The Finder is temporarily unavailable</h1>
+    <p>The questionnaire and recommendations are unavailable right now. Please try again later.</p>
+    <p>This temporary page has no forms, analytics scripts, or referral links. Answers from an earlier session cannot be recovered here.</p>
+    <p><a class="action" href="/">Try the Finder again</a></p>
+    <p>If this message remains, please try again later.</p>
   </main>
 </body>
 </html>
