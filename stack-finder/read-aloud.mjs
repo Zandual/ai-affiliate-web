@@ -27,7 +27,10 @@ export function setupReadAloud(doc = document, view = doc.defaultView) {
     utterance = null;
     button.textContent = 'Read aloud';
     status.textContent = message;
-    if (wasActive) synth.cancel();
+    if (wasActive) {
+      try { synth.cancel(); }
+      catch { status.textContent = 'Stop requested, but the browser speech engine did not respond. Close this tab if audio continues.'; }
+    }
   }
   function available() {
     if (active) return;
@@ -65,8 +68,14 @@ export function setupReadAloud(doc = document, view = doc.defaultView) {
     next();
   });
   // Do not announce prose through aria-live or move focus: speech is opt-in only.
-  const observer = new view.MutationObserver(() => { if (active) finish('Reading stopped because the Finder changed. Select Read aloud to read the new section.'); });
-  observer.observe(content, { childList: true, subtree: true, characterData: true });
+  const stopForChange = () => { if (active) finish('Reading stopped because the Finder changed. Select Read aloud to read the new section.'); };
+  const observer = new view.MutationObserver(stopForChange);
+  observer.observe(content, { childList: true, subtree: true, characterData: true,
+    attributes: true, attributeFilter: ['open', 'hidden', 'aria-hidden'] });
+  // Native form edits and details toggles need not alter text nodes.
+  content.addEventListener('input', stopForChange);
+  content.addEventListener('change', stopForChange);
+  content.addEventListener('toggle', stopForChange, true);
   doc.addEventListener('visibilitychange', () => { if (doc.hidden && active) finish('Reading stopped.'); });
   view.addEventListener('pagehide', () => { if (active) finish('Reading stopped.'); });
   synth?.addEventListener?.('voiceschanged', available);
