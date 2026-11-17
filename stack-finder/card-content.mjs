@@ -44,7 +44,7 @@ function reason(tool, input, profile) {
     case 'INSUFFICIENT_JOB_FIT':
       return `You chose ${job}. This tool focuses on ${profile.focus}, so it is not a close match for that need.`;
     case 'OVER_BUDGET':
-      return `Its paid comparison amount is above your budget.${tool.status === 'TRY_FREE' ? ' Only a free evaluation is suggested.' : ' No paid addition is suggested.'}`;
+      return `Its paid comparison amount is above the amount remaining after your existing monthly costs.${tool.status === 'TRY_FREE' ? ' Only a free evaluation is suggested.' : ' No paid addition is suggested.'}`;
     case 'COMBINED_BUDGET':
       return 'The combined paid comparison amounts would exceed your budget. Do not commit to this alongside the higher-ranked addition.';
     case 'OCCASIONAL_USE':
@@ -53,7 +53,7 @@ function reason(tool, input, profile) {
       return 'Monthly use does not yet justify a paid subscription. Establish a recurring need before paying.';
     default:
       if (tool.status === 'ADD') {
-        return `You chose ${job} with ${input.frequency} use. This tool matches that job, and its comparison amount fits your stated budget.`;
+        return `You chose ${job} with ${input.frequency} use. This tool matches that job, and its comparison amount fits the amount remaining after your entered existing monthly costs.`;
       }
       return tool.reasons.join(' ');
   }

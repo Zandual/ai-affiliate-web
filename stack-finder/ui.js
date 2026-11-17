@@ -393,19 +393,23 @@ export function mountStackFinder(root, { affiliatePolicy = DEFAULT_AFFILIATE_POL
   }
 
   function renderResults() {
-    const [label, title, description] = STATES[result.state];
+    const [label, title, description] = result.state === 'BUDGET_CONSTRAINT' && result.cost.availableForNewMonthly === null
+      ? ['Budget not yet known', 'Check your existing monthly costs.', 'Some existing costs are unknown. Enter every cost before considering a paid addition; we cannot establish whether it fits your total budget.']
+      : STATES[result.state];
     const spend = (name, value) => element('div', {}, element('dt', {}, name), element('dd', {}, money(value)));
     const content = element('div', { class: 'sf-results', 'data-state': result.state, 'data-buy-nothing': String(result.buyNothing) },
       element('div', { class: 'sf-result-summary' }, element('span', { class: 'sf-state-label' }, label),
         element('h2', { class: 'sf-title', tabindex: '-1' }, title), element('p', { class: 'sf-lead' }, description)),
       element('dl', { class: 'sf-spend' },
         spend('Current monthly spend · entered by you', result.cost.currentUserEnteredMonthly),
+        spend('Budget remaining after existing costs', result.cost.availableForNewMonthly),
         spend('New paid spend in this comparison', result.cost.recommendedNewMonthly),
+        spend('Estimated total with paid additions', result.cost.recommendedEstimatedMonthly),
         spend('Monthly spend to review for overlap', result.cost.overlapReviewMonthly)),
       element('p', { class: 'sf-note' }, result.cost.currentUserEnteredMonthly === null
-        ? `Known entered subtotal: ${money(result.cost.currentKnownMonthly)}. Other subscription costs are unknown, so your total is unknown.`
+        ? `Known entered subtotal: ${money(result.cost.currentKnownMonthly)}. Other subscription costs are unknown, so your total and remaining budget are unknown. Enter every existing cost before considering paid additions.`
         : 'Current spend uses only the amounts you entered. Overlap review does not imply guaranteed savings.'),
-      element('p', { class: 'sf-note' }, 'New-spend figures use fixed comparison amounts, not current provider prices. Free evaluations and optional tools add no paid commitment here. Check current pricing, limits, and usage rights before choosing a plan.'));
+      element('p', { class: 'sf-note' }, 'New-spend figures use fixed comparison amounts, not current provider prices. Free evaluations and optional tools add no paid commitment here. Taxes or usage charges may increase actual costs. Check current pricing, limits, and usage rights before choosing a plan.'));
     if (result.audit.length) content.append(element('h3', { class: 'sf-section-title' }, 'Your existing tools'),
       element('div', { class: 'sf-card-grid', 'data-audit': '' }, result.audit.map(tool => toolCard(tool, true))));
     content.append(element('h3', { class: 'sf-section-title' }, 'New-tool decisions'),

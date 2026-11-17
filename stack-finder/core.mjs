@@ -95,13 +95,31 @@ export function budgetFit(monthlyPrice, budget) {
   return -4;
 }
 
+// Existing subscriptions remain committed until the user actually changes them.
+// Unknown costs never imply zero headroom or a cancellation saving.
+// The UI accepts cents. For finer programmatic amounts, reserve costs upward
+// and budget downward. Snap only floating-point noise at integer-cent boundaries.
+function cents(value, round) {
+  const scaled = value * 100;
+  const nearest = Math.round(scaled);
+  return Math.abs(scaled - nearest) <= Number.EPSILON * Math.max(1, Math.abs(scaled)) * 2
+    ? nearest : round(scaled);
+}
+function availableBudget(input, coverage) {
+  if (coverage.cost.currentUserEnteredMonthly === null) return null;
+  const committed = input.existingTools.reduce((sum, tool) => sum + cents(tool.monthlyCost, Math.ceil), 0);
+  return Math.max(0, cents(input.budget, Math.floor) - committed) / 100;
+}
+
 function scoreDecisionTool(tool, input, coverage) {
+  const remaining = availableBudget(input, coverage);
+  const unknownPaidBudget = remaining === null && tool.monthlyPrice > 0;
   const existing = input.existingTools.some(owned => owned.toolId === tool.id);
   const samePrimaryCategory = coverage.hasPrimarySpecialist && tool.category === input.primaryJob;
   const scoreBreakdown = {
     jobFit: tool.jobFit[input.primaryJob],
     frequencyFit: FREQUENCY_POINTS[input.frequency],
-    budgetFit: budgetFit(tool.monthlyPrice, input.budget),
+    budgetFit: budgetFit(tool.monthlyPrice, remaining ?? 0),
     uniqueCapability: tool.uniqueCapability,
     overlapPenalty: samePrimaryCategory ? -9 : 0,
     problemModifier: ['time', 'quality'].includes(input.biggestPain) ? 2 : 0,
@@ -112,8 +130,9 @@ function scoreDecisionTool(tool, input, coverage) {
   if (existing) hardGates.push('EXISTING_TOOL');
   if (jobFit < 12) hardGates.push('INSUFFICIENT_JOB_FIT');
   if (coverage.hasPrimarySpecialist) hardGates.push('PRIMARY_ALREADY_COVERED');
-  if (tool.monthlyPrice > input.budget) hardGates.push('OVER_BUDGET');
-  if (input.budget <= 0 && tool.monthlyPrice > 0) hardGates.push('NO_PAID_BUDGET');
+  if (unknownPaidBudget) hardGates.push('UNKNOWN_EXISTING_COST');
+  if (remaining !== null && tool.monthlyPrice > remaining) hardGates.push('OVER_BUDGET');
+  if (remaining === 0 && tool.monthlyPrice > 0) hardGates.push('NO_PAID_BUDGET');
   if (input.frequency === 'occasional') hardGates.push('OCCASIONAL_USE');
   if (input.frequency === 'monthly') hardGates.push('MONTHLY_USE');
 
@@ -132,11 +151,14 @@ function scoreDecisionTool(tool, input, coverage) {
   } else if (coverage.hasPrimarySpecialist) {
     // No explicit secondary capability gap exists in the v1 questionnaire.
     decide('SKIP', 'PRIMARY_ALREADY_COVERED', 'Your existing specialist covers this job; no additional purchase is justified.');
-  } else if (tool.monthlyPrice > input.budget) {
+  } else if (unknownPaidBudget) {
+    decide(tool.hasFreeTier && jobFit >= 18 ? 'TRY_FREE' : 'SKIP', 'UNKNOWN_EXISTING_COST',
+      'Enter all existing monthly costs before considering a paid addition. Until then, only a relevant free tier can be evaluated without adding paid spend.');
+  } else if (tool.monthlyPrice > remaining) {
     decide(tool.hasFreeTier && jobFit >= 18 ? 'TRY_FREE' : 'SKIP', 'OVER_BUDGET',
       tool.hasFreeTier && jobFit >= 18
-        ? 'Start with the free tier; the paid plan exceeds your stated budget.'
-        : 'The paid plan exceeds your stated budget.');
+        ? 'Start with the free tier; the paid plan exceeds the amount left after your existing monthly costs.'
+        : 'The paid plan exceeds the amount left after your existing monthly costs.');
   } else if (input.frequency === 'occasional') {
     decide(tool.hasFreeTier && jobFit >= 18 ? 'TRY_FREE' : 'SKIP', 'OCCASIONAL_USE',
       'Occasional use does not justify a paid specialist; use a relevant free tier where available.');
@@ -202,11 +224,12 @@ export function recommend(input, { catalog = CATALOG } = {}) {
 
   // The frozen catalog has one primary specialist per job. If a supplied
   // decision catalog has more, their combined new paid spend must still fit.
-  let remainingBudget = normalized.budget;
+  let remainingBudget = cents(availableBudget(normalized, coverage) ?? 0, Math.floor);
   for (const candidate of recommendations) {
     if (candidate.status !== 'ADD') continue;
-    if (candidate.monthlyPrice <= remainingBudget) {
-      remainingBudget -= candidate.monthlyPrice;
+    const candidateCents = cents(candidate.monthlyPrice, Math.ceil);
+    if (candidateCents <= remainingBudget) {
+      remainingBudget -= candidateCents;
     } else {
       candidate.status = candidate.hasFreeTier && candidate.scoreBreakdown.jobFit >= 18
         ? 'TRY_FREE' : 'OPTIONAL';
@@ -231,7 +254,7 @@ export function recommend(input, { catalog = CATALOG } = {}) {
   } else if (recommendations.some(tool => ['ADD', 'TRY_FREE'].includes(tool.status))) {
     state = 'RECOMMENDATIONS';
   } else if (decisionCatalog.some(tool => tool.jobFit[normalized.primaryJob] >= 18
-    && tool.monthlyPrice > normalized.budget)) {
+    && tool.monthlyPrice > (availableBudget(normalized, coverage) ?? 0))) {
     state = 'BUDGET_CONSTRAINT';
   } else {
     state = 'NO_STRONG_RECOMMENDATION';
@@ -263,6 +286,7 @@ export function recommend(input, { catalog = CATALOG } = {}) {
     recommendations,
     cost: {
       ...coverage.cost,
+      availableForNewMonthly: availableBudget(normalized, coverage),
       recommendedNewMonthly,
       recommendedEstimatedMonthly: coverage.cost.currentEstimatedMonthly === null
         ? null : coverage.cost.currentEstimatedMonthly + recommendedNewMonthly,
