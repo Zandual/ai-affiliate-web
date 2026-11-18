@@ -443,4 +443,4 @@ export function mountStackFinder(root, { affiliatePolicy = DEFAULT_AFFILIATE_POL
 }
 
 const root = document.getElementById('stack-finder');
-if (root) mountStackFinder(root);
+if (root) mountStackFinder(root, { affiliatePolicy: { enabled: true, url: DEFAULT_AFFILIATE_POLICY.url } });
